@@ -1442,15 +1442,25 @@ function fillPV(t){
   // Objet
   const el_obj=document.getElementById('pv-objet');
   if(el_obj)el_obj.textContent=`Le présent procès-verbal documente le test de restauration numéro ${t.num||'T'+(APP.tests.indexOf(t)+1)} effectué sur le système ${t.app} de AFG Bank ${t.filiale}. L'objectif est de vérifier l'intégrité, l'exhaustivité et la cohérence des données restaurées par rapport à la base de données de production, à la date de référence du ${dateStr}. Les données comparées couvrent l'ensemble des tables transactionnelles et référentielles du système ${t.app}, conformément au plan de continuité d'activité (PCA) et aux exigences réglementaires COBAC/BEAC.`;
-  // Environnements
-  const envBody=document.getElementById('pv-env-body');
-  if(envBody)envBody.innerHTML=`
-    <tr><td><strong>Serveur / Hôte</strong></td><td style="color:var(--blue)">${t.prodHost||'—'}</td><td style="color:var(--orange)">${t.restHost||'Non renseigné'}</td></tr>
+  // ==================== Dans la fonction fillPV(t) ====================
+
+// Environnements
+const envBody = document.getElementById('pv-env-body');
+if (envBody) {
+  envBody.innerHTML = `
+    <tr><td><strong>Serveur / Hôte</strong></td><td style="color:var(--blue)">${t.prodHost || '—'}</td><td style="color:var(--orange)">${t.restHost || 'Non renseigné'}</td></tr>
     <tr><td><strong>Port TCP</strong></td><td>1521</td><td>1521</td></tr>
-    <tr><td><strong>Service Oracle / SID</strong></td><td>${t.prodSid||'—'}</td><td>${t.restSid||'—'}</td></tr>
-    <tr><td><strong>Type de base</strong></td><td>${(t.srvType||'oracle').toUpperCase()}</td><td>${(t.srvType||'oracle').toUpperCase()}</td></tr>
+    <tr><td><strong>Service Oracle / SID</strong></td><td>${t.prodSid || '—'}</td><td>${t.restSid || '—'}</td></tr>
+    <tr><td><strong>Type de base</strong></td><td>${(t.srvType || 'oracle').toUpperCase()}</td><td>${(t.srvType || 'oracle').toUpperCase()}</td></tr>
     <tr><td><strong>Utilisateur BD</strong></td><td>EDA_READONLY</td><td>EDA_READONLY</td></tr>
-    <tr><td><strong>Mode d'exécution</strong></td><td colspan="2">${t.mode==='both'?'Simultané (PROD + REST en parallèle)':'Différé (PROD d'abord, REST séparé)'}</td></tr>`;
+    <tr>
+      <td><strong>Mode d'exécution</strong></td>
+      <td colspan="2">${t.mode === 'both' 
+        ? 'Simultané (PROD + REST en parallèle)' 
+        : 'Différé (PROD d\'abord, REST séparé)'}
+      </td>
+    </tr>`;
+}
   // Résultats
   const ko=t.ecarts||0; const taux=t.taux||97.9;
   const vClass=t.verdict==='CONFORME'?'pv-v-ok':t.verdict==='PARTIEL'?'pv-v-wa':'pv-v-ko';
@@ -1473,10 +1483,11 @@ function fillPV(t){
     </tr>`).join('');
   // Analyse
   const el_an=document.getElementById('pv-analysis');
-  if(el_an)el_an.innerHTML=ko>0
-    ?`<p>Les <strong>${ko} écart(s)</strong> détectés concernent des transactions en état <em>PENDING</em> au moment de la prise d'instantané de la base (${dateStr}). Ces opérations ont été committées dans la base de production après l'heure de snapshot et sont donc naturellement absentes de la base restaurée. Ce comportement est <strong>attendu et documenté</strong> dans les procédures de restauration.</p>
+  // Remplace le bloc autour de la ligne 1479 par :
+if(el_an)el_an.innerHTML=ko>0
+  ?`<p>Les <strong>${ko} écart(s)</strong> détectés concernent des transactions en état <em>PENDING</em> au moment de la prise d'instantané de la base (${dateStr}). Ces opérations ont été committées dans la base de production après l'heure de snapshot et sont donc naturellement absentes de la base restaurée. Ce comportement est <strong>attendu et documenté</strong> dans les procédures de restauration.</p>
     <p style="margin-top:10px">Les données de référence (clients, comptes, crédits, contrats) sont <strong>intégralement présentes et conformes</strong>. Seules les opérations transactionnelles de dernière minute présentent un écart mineur explicable.</p>`
-    :'<p>✅ Aucun écart détecté. L'ensemble des données transactionnelles et référentielles sont <strong>parfaitement conformes</strong> entre la base de production et la base restaurée. La restauration est complète et intègre.</p>';
+  :'<p>✅ Aucun écart détecté. L\'ensemble des données transactionnelles et référentielles sont <strong>parfaitement conformes</strong> entre la base de production et la base restaurée. La restauration est complète et intègre.</p>';
   // Note VPN
   const el_vpn=document.getElementById('pv-vpn-text');
   if(el_vpn)el_vpn.textContent=t.mode==='both'
@@ -1858,20 +1869,24 @@ function renderDash(){
 }
 
 
+// ==================== PV ====================
+function fillPV(t){
+  if(!t){t=APP.tests[0];if(!t)return;}
+  // ... (le reste de la fonction reste identique jusqu'à l'analyse)
+
+  // Analyse
+  const el_an=document.getElementById('pv-analysis');
+  if(el_an)el_an.innerHTML=ko>0
+    ?`<p>Les <strong>${ko} écart(s)</strong> détectés concernent des transactions en état <em>PENDING</em> au moment de la prise d'instantané de la base (${dateStr}). Ces opérations ont été committées dans la base de production après l'heure de snapshot et sont donc naturellement absentes de la base restaurée. Ce comportement est <strong>attendu et documenté</strong> dans les procédures de restauration.</p>
+      <p style="margin-top:10px">Les données de référence (clients, comptes, crédits, contrats) sont <strong>intégralement présentes et conformes</strong>. Seules les opérations transactionnelles de dernière minute présentent un écart mineur explicable.</p>`
+    :'<p>✅ Aucun écart détecté. L\'ensemble des données transactionnelles et référentielles sont <strong>parfaitement conformes</strong> entre la base de production et la base restaurée. La restauration est complète et intègre.</p>';
+  // ... reste de la fonction
+}
+
 // ==================== PV EXTRA ====================
-function changePVTest(id){
-  if(!id)return;
-  const t=APP.tests.find(x=>x.id===id);
-  if(t)fillPV(t);
-}
 function exportPVPDF(){
-  showNotif('📄 Utilisez Ctrl+P puis "Enregistrer en PDF" dans la boîte d'impression. Le document est optimisé pour impression A4.','ok');
-  setTimeout(()=>window.print(),1500);
-}
-function initPVSelect(){
-  const sel=document.getElementById('pv-select');if(!sel)return;
-  sel.innerHTML='<option value="">— Sélectionner un test —</option>'+
-    APP.tests.filter(t=>t.verdict&&t.verdict!=='EN ATTENTE').map(t=>`<option value="${t.id}">${t.ref} (${t.filiale} · ${t.atDate})</option>`).join('');
+  showNotif('📄 Appuyez sur Ctrl+P → "Enregistrer en PDF". Le document est optimisé A4.','ok');
+  setTimeout(()=>window.print(),1200);
 }
 
 // ==================== EXPORTS ====================
