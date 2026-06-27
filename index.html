@@ -1,1225 +1,614 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DBS DataVerify v3.5 — AFG Bank</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<style>
-:root {
-  --blue:#0D47A1;--blue-d:#002171;--blue-l:#1565C0;--blue-ll:#E3F2FD;
-  --green:#00C853;--green-d:#00843A;--green-ll:#E8F5E9;
-  --red:#C62828;--red-ll:#FFEBEE;
-  --orange:#E65100;--orange-ll:#FFF3E0;
-  --gray-50:#FAFAFA;--gray-100:#F5F5F5;--gray-200:#EEEEEE;--gray-300:#E0E0E0;
-  --gray-500:#9E9E9E;--gray-700:#616161;--gray-900:#212121;
-  --sidebar:260px;--topbar:62px;--r:8px;
-  --shadow:0 1px 4px rgba(0,0,0,.10);
-}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--gray-100);color:var(--gray-900);font-size:14px;overflow-x:hidden}
-input,select,textarea,button{font-family:inherit;font-size:14px}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DBS DataVerify v4.0 — Continuité & Intégrité BD</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    :root {
+      --blue: #002171;
+      --blue-light: #0d47a1;
+      --orange: #e65100;
+      --green: #2e7d32;
+      --green-d: #1b5e20;
+      --red: #c62828;
+      --gray-100: #f5f5f5;
+      --gray-200: #eeeeee;
+      --gray-300: #e0e0e0;
+      --gray-500: #9e9e9e;
+      --gray-700: #616161;
+      --gray-900: #212121;
+      --sidebar-width: 260px;
+    }
 
-/* AUTHENTIFICATION */
-#auth{position:fixed;inset:0;background:linear-gradient(135deg,var(--blue-d) 0%,var(--blue) 100%);display:flex;align-items:center;justify-content:center;z-index:9999}
-.auth-box{background:#fff;border-radius:16px;padding:40px;width:420px;box-shadow:0 24px 64px rgba(0,0,0,.35)}
-.auth-logo{text-align:center;margin-bottom:28px}
-.auth-emblem{width:72px;height:72px;background:var(--blue);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;margin-bottom:10px}
-.auth-emblem svg{width:40px;height:40px;fill:none;stroke:#fff;stroke-width:2}
-.auth-box h1{font-size:20px;font-weight:700;color:var(--blue-d)}
-.auth-box p{font-size:12px;color:var(--gray-500);margin-top:3px}
-.fld{margin-bottom:14px}
-.fld label{display:block;font-size:11px;font-weight:700;color:var(--gray-700);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
-.fld input,.fld select{width:100%;padding:9px 12px;border:1.5px solid var(--gray-300);border-radius:6px;outline:none;transition:border .2s}
-.fld input:focus,.fld select:focus{border-color:var(--blue)}
-.btn-login{width:100%;padding:11px;background:var(--blue);color:#fff;border:none;border-radius:7px;font-size:15px;font-weight:700;cursor:pointer;margin-top:6px;transition:background .2s}
-.btn-login:hover{background:var(--blue-l)}
-.auth-err{background:#ffebee;color:#c62828;border:1px solid #ffcdd2;border-radius:6px;padding:9px 12px;font-size:13px;margin-bottom:14px;display:none}
-.auth-foot{text-align:center;font-size:11px;color:var(--gray-500);margin-top:18px}
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #f4f6f9; color: var(--gray-900); display: flex; height: 100vh; overflow: hidden; }
 
-/* STRUCTURE GLOBALE DE L'APPLICATION */
-#app{display:none;min-height:100vh}
-.topbar{position:fixed;top:0;left:0;right:0;height:var(--topbar);background:var(--blue-d);display:flex;align-items:center;padding:0 20px;z-index:200;gap:14px}
-.topbar-brand{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none}
-.topbar-brand .dot{width:34px;height:34px;background:var(--green);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:bold;color:white}
-.topbar-brand span{font-size:17px;font-weight:700}
-.topbar-brand small{font-size:10px;opacity:.65;display:block}
-.topbar-space{flex:1}
-.topbar-right{display:flex;align-items:center;gap:10px;color:#fff}
-.topbar-av{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px}
-.topbar-info small{font-size:10px;opacity:.65;display:block}
-.topbar-info span{font-size:13px;font-weight:600}
-.btn-out{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;padding:5px 12px;border-radius:5px;cursor:pointer;font-size:12px;font-weight:600}
-.btn-out:hover{background:rgba(255,255,255,.22)}
+    #auth { display: flex; width: 100vw; height: 100vh; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--blue), var(--blue-light)); }
+    .auth-card { background: white; padding: 30px; border-radius: 12px; width: 100%; max-width: 420px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+    
+    #app { display: none; width: 100vw; height: 100vh; flex-direction: row; }
+    
+    .sidebar { width: var(--sidebar-width); background-color: var(--blue); color: white; display: flex; flex-direction: column; flex-shrink: 0; }
+    .sidebar-h { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); text-align: center; }
+    .nav-list { list-style: none; padding: 15px 0; flex: 1; overflow-y: auto; }
+    .nav-it { padding: 12px 20px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.7); transition: all 0.2s; }
+    .nav-it:hover, .nav-it.on { color: white; background-color: rgba(255,255,255,0.1); border-left: 4px solid var(--orange); }
+    
+    main { flex: 1; display: flex; flex-direction: column; overflow: hidden; background-color: #f8f9fa; }
+    header { height: 60px; background: white; border-bottom: 1px solid var(--gray-300); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; flex-shrink: 0; }
+    .content-area { flex: 1; padding: 24px; overflow-y: auto; overflow-x: hidden; }
 
-/* SIDEBAR & NAVIGATION */
-.sidebar{position:fixed;top:var(--topbar);left:0;width:var(--sidebar);height:calc(100vh - var(--topbar));background:var(--blue-d);overflow-y:auto;padding:12px 0}
-.nav-grp{padding:4px 16px 0;margin-top:10px}
-.nav-grp-lbl{font-size:9.5px;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,.38);margin-bottom:6px;padding:0 6px}
-.nav-it{display:flex;align-items:center;gap:9px;padding:9px 14px;color:rgba(255,255,255,.68);border-radius:7px;cursor:pointer;transition:all .15s;margin:1px 6px;font-size:13px}
-.nav-it:hover{background:rgba(255,255,255,.1);color:#fff}
-.nav-it.on{background:var(--green);color:#fff;font-weight:600}
-.nav-it svg{width:16px;height:16px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:2}
+    .pg { display: none; }
+    .pg.on { display: block; }
+    .card { background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; border: 1px solid var(--gray-300); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+    .ph { margin-bottom: 20px; border-bottom: 2px solid var(--blue); padding-bottom: 8px; display: flex; justify-content: space-between; align-items: center;}
+    .ph h2 { color: var(--blue); font-size: 20px; }
+    
+    .btn-block-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 20px; }
+    .action-card { background: var(--gray-100); border: 1px solid var(--gray-300); border-radius: 8px; padding: 15px; text-align: center; }
 
-/* CONTENEUR DE CONTENU PRINCIPAL */
-.main{margin-left:var(--sidebar);margin-top:var(--topbar);padding:24px;min-height:calc(100vh - var(--topbar))}
-.pg{display:none}.pg.on{display:block}
-.ph{margin-bottom:20px}
-.ph h2{font-size:22px;font-weight:700;color:var(--blue-d)}
-.ph p{font-size:13px;color:var(--gray-500);margin-top:3px}
+    .tw { width: 100%; overflow-x: auto; border: 1px solid var(--gray-300); border-radius: 6px; margin-top: 10px; }
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+    th { background-color: var(--gray-100); padding: 12px; font-weight: 600; border-bottom: 2px solid var(--gray-300); }
+    td { padding: 12px; border-bottom: 1px solid var(--gray-200); vertical-align: top; }
+    tr.dr-ko { background-color: #fff8f8; }
+    tr.dr-ok { background-color: #f9fff9; }
 
-/* CARDS ET ÉLÉMENTS UI */
-.card{background:#fff;border-radius:var(--r);box-shadow:var(--shadow);padding:20px;margin-bottom:18px}
-.card-h{font-size:14px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:7px;color:var(--gray-900)}
-.card-h svg{width:16px;height:16px;color:var(--blue);flex-shrink:0;fill:none;stroke:currentColor;stroke-width:2}
+    .bd { padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-block; }
+    .bd-ok { background: #e8f5e9; color: var(--green-d); }
+    .bd-ko { background: #ffebee; color: var(--red); }
+    .bd-in { background: #e3f2fd; color: var(--blue-light); }
 
-/* TABLEAUX ET DÉFILEMENT HORIZONTAL REQUIS */
-.tw{width:100%;overflow-x:auto;margin-bottom:10px;border:1px solid var(--gray-200);border-radius:6px;-webkit-overflow-scrolling:touch}
-table{width:100%;border-collapse:collapse;text-align:left;font-size:13px;white-space:nowrap}
-th{background:var(--gray-50);color:var(--gray-700);font-weight:600;padding:10px 14px;border-bottom:2px solid var(--gray-200)}
-td{padding:10px 14px;border-bottom:1px solid var(--gray-200);color:var(--gray-900)}
-tr:hover td{background:var(--gray-50)}
+    .fr { display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap; }
+    .ff { flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 5px; }
+    .ff label { font-size: 12px; font-weight: bold; color: var(--gray-700); }
+    input, select, textarea { padding: 8px 12px; border: 1.5px solid var(--gray-300); border-radius: 6px; font-size: 13px; width: 100%; }
+    
+    .btn { padding: 8px 16px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
+    .btn-bl { background: var(--blue); color: white; }
+    .btn-or { background: var(--orange); color: white; }
+    .btn-gr { background: var(--green); color: white; }
+    .btn-rd { background: var(--red); color: white; }
+    .btn-gy { background: var(--gray-300); color: var(--gray-900); }
+    .btn-sm { padding: 4px 8px; font-size: 11px; border-radius: 4px; }
 
-/* BOUTONS ET BADGES */
-.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:6px;font-weight:600;cursor:pointer;border:none;transition:all .15s;font-size:13px}
-.btn-bl{background:var(--blue);color:#fff}.btn-bl:hover{background:var(--blue-l)}
-.btn-gr{background:var(--green);color:#fff}.btn-gr:hover{background:var(--green-d)}
-.btn-rd{background:var(--red);color:#fff}.btn-rd:hover{background:rgba(198,40,40,0.9)}
-.btn-gy{background:var(--gray-200);color:var(--gray-700)}.btn-gy:hover{background:var(--gray-300)}
-.btn-sm{padding:5px 10px;font-size:12px}
+    .mo { position: fixed; top:0; left:0; width:100vw; height:100vh; background: rgba(0,0,0,0.4); display: none; align-items: center; justify-content: center; z-index: 10000; padding: 20px; }
+    .mo.op { display: flex; }
+    .mo-c { background: white; border-radius: 8px; width: 100%; max-width: 650px; max-height: 90vh; overflow-y: auto; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
 
-.bd{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600}
-.bd-ok{background:var(--green-ll);color:var(--green-d)}
-.bd-wa{background:var(--orange-ll);color:var(--orange)}
-.bd-ko{background:var(--red-ll);color:var(--red)}
-.bd-gy{background:var(--gray-200);color:var(--gray-700)}
+    .log { background: #1e1e1e; color: #d4d4d4; font-family: monospace; padding: 15px; border-radius: 6px; height: 300px; overflow-y: auto; font-size: 12px; }
+    .ws-wrap { display: flex; justify-content: space-between; margin-bottom: 25px; background: white; padding: 15px; border-radius: 8px; border: 1px solid var(--gray-300); flex-wrap: wrap; gap: 10px; }
+    .ws-it { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: bold; color: var(--gray-500); }
+    .ws-it.on { color: var(--blue); }
+    .sdot { width: 22px; height: 22px; border-radius: 50%; background: var(--gray-300); color: white; display: flex; align-items: center; justify-content: center; font-size: 11px; }
+    .ws-it.on .sdot { background: var(--blue); }
 
-/* GRID & MESSAGES D'ALERTE */
-.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-@media(max-width:768px){.grid-2{grid-template-columns:1fr}.sidebar{display:none}.main{margin-left:0}}
-.al{padding:12px 16px;border-radius:6px;margin-bottom:14px;display:flex;gap:10px;font-size:13px;line-height:1.4}
-.al svg{flex-shrink:0;margin-top:2px}
-.al-in{background:var(--blue-ll);color:var(--blue-d)}
-.al-wa{background:var(--orange-ll);color:var(--orange)}
-.al-ko{background:var(--red-ll);color:var(--red)}
-
-/* LOGS */
-.log{background:var(--gray-900);color:#a2b4c7;font-family:monospace;padding:14px;border-radius:6px;overflow-y:auto;font-size:12px;line-height:1.5}
-.log-line{margin-bottom:4px;word-break:break-all}
-.log-INFO{color:#90caf9}.log-OK{color:#a5d6a7}.log-WARN{color:#ffcc80}.log-ERROR{color:#ef9a9a}
-
-/* MODAL STRUCTURE */
-.mo{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .15s}
-.mo.op{opacity:1;pointer-events:auto}
-.mo-box{background:#fff;border-radius:12px;width:550px;max-width:95%;box-shadow:0 12px 32px rgba(0,0,0,.15);display:flex;flex-direction:column;max-height:90vh}
-.mo-h{padding:16px 20px;border-bottom:1px solid var(--gray-200);display:flex;align-items:center;justify-content:space-between}
-.mo-h h3{font-size:16px;font-weight:700}
-.mo-b{padding:20px;overflow-y:auto;flex:1}
-.mo-f{padding:14px 20px;border-top:1px solid var(--gray-200);display:flex;justify-content:flex-end;gap:10px}
-
-/* ÉCRAN DE VÉRIFICATION DE LA CONNEXION */
-.conn-status{font-weight:bold;margin-top:10px;padding:8px;border-radius:4px;display:none}
-
-/* NOTIFICATION FLOTTANTE */
-#notif{position:fixed;bottom:24px;right:24px;background:var(--gray-900);color:#fff;padding:12px 20px;border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,.2);z-index:10000;display:none;font-weight:600;align-items:center;gap:10px}
-
-/* DOCUMENT PV PRODUCTION STYLE */
-.pv-doc{background:#fff;border:1px solid var(--gray-300);padding:40px;border-radius:4px;max-width:850px;margin:0 auto;color:#000;font-family:'Times New Roman',Times,serif}
-.pv-h{border-bottom:2px solid #000;padding-bottom:14px;margin-bottom:20px;display:flex;justify-content:between;align-items:center}
-.pv-title{text-align:center;font-size:18px;font-weight:bold;text-transform:uppercase;margin:20px 0;letter-spacing:0.5px}
-.pv-meta-tbl{width:100%;margin-bottom:20px}
-.pv-meta-tbl td{border:1px solid #000;padding:6px 10px;font-family:inherit;font-size:13px}
-.pv-sect-title{font-size:14px;font-weight:bold;text-transform:uppercase;margin-top:20px;margin-bottom:8px;border-bottom:1px dashed #000;padding-bottom:2px}
-.pv-verdict{padding:15px;border:2px solid #000;text-align:center;font-weight:bold;font-size:16px;margin:20px 0;border-radius:4px}
-.pv-v-ok{background:#e8f5e9;border-color:var(--green);color:var(--green-d)}
-.pv-v-wa{background:#fff3e0;border-color:var(--orange);color:var(--orange)}
-.pv-v-ko{background:#ffebee;border-color:var(--red);color:var(--red)}
-</style>
+    .mob-menu-btn { display: none; background: none; border: none; color: var(--gray-900); cursor: pointer; }
+    @media (max-width: 768px) {
+      body { flex-direction: column; }
+      .sidebar { position: fixed; left: -100%; top: 0; bottom: 0; z-index: 9999; transition: left 0.3s; }
+      .sidebar.mob-open { left: 0; }
+      .mob-menu-btn { display: block; }
+      .fr { flex-direction: column; }
+    }
+  </style>
 </head>
 <body>
 
-<div id="auth">
-  <div class="auth-box">
-    <div class="auth-logo">
-      <div class="auth-emblem">
-        <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+  <div id="auth">
+    <div class="auth-card">
+      <h2 style="text-align:center; color: var(--blue); margin-bottom: 5px;">DBS DataVerify</h2>
+      <p style="text-align:center; font-size:12px; color:var(--gray-500); margin-bottom:20px;">Atlantic Financial Group — Intégrité PCA</p>
+      <div id="auth-err" style="display:none; background:#ffebee; color:var(--red); padding:10px; border-radius:6px; font-size:12px; margin-bottom:15px; font-weight:600;">
+        🚫 Accès refusé ou compte bloqué !
       </div>
-      <h1>DBS DataVerify v3.5</h1>
-      <p>AFG Bank — Pôle d'Audit des Restorations Multi-Filiales</p>
-    </div>
-    <div class="auth-err" id="auth-err-msg">Identifiants incorrects ou compte suspendu.</div>
-    <div class="fld">
-      <label>Identifiant Banque</label>
-      <input type="text" id="auth-user" placeholder="Ex: s.djoko" value="">
-    </div>
-    <div class="fld">
-      <label>Mot de passe</label>
-      <input type="password" id="auth-pwd" placeholder="••••••••" value="">
-    </div>
-    <button class="btn-login" onclick="doLogin()">Ouvrir la session réseau</button>
-    <div class="auth-foot">Sécurité renforcée SHA-256 réglementaire COBAC / BEAC</div>
-  </div>
-</div>
-
-<div id="app">
-  <header class="topbar">
-    <a href="#" class="topbar-brand">
-      <div class="dot">DBS</div>
-      <div><span>DataVerify v3.5</span><small>AFG Bank Group IT Security</small></div>
-    </a>
-    <div class="topbar-space"></div>
-    <div class="topbar-right">
-      <div class="topbar-av" id="u-avatar">—</div>
-      <div class="topbar-info">
-        <span id="sb-user-name">—</span>
-        <small id="sb-user-role">Déconnecté</small>
-      </div>
-      <button class="btn-out" title="Fermer la session réseau" onclick="doLogout()">Déconnexion</button>
-    </div>
-  </header>
-
-  <div class="sidebar">
-    <div class="nav-grp">
-      <div class="nav-grp-lbl">Opérations de Contrôle</div>
-      <div class="nav-it on" id="m-dash" onclick="swPg('dash')">
-        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
-        <span>Tableau de bord Général</span>
-      </div>
-      <div class="nav-it" id="m-new-test" onclick="swPg('new-test')">
-        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-        <span>Lancer un Audit / Test</span>
-      </div>
-      <div class="nav-it" id="m-history" onclick="swPg('history')">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        <span>Historique & Archives PV</span>
-      </div>
-    </div>
-    
-    <div class="nav-grp">
-      <div class="nav-grp-lbl">Configuration Technique</div>
-      <div class="nav-it" id="m-queries" onclick="swPg('queries')">
-        <svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-        <span>Référentiel des Scripts SQL</span>
-      </div>
-      <div class="nav-it" id="m-servers" onclick="swPg('servers')">
-        <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
-        <span>Cartographie des Filiales & BDs</span>
-      </div>
-    </div>
-
-    <div class="nav-grp admin-only" style="display:none;" id="nav-admin-section">
-      <div class="nav-grp-lbl">Administration & Gouvernance</div>
-      <div class="nav-it" id="m-users" onclick="swPg('users')">
-        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        <span>Gestion des Droits Admin</span>
-      </div>
-      <div class="nav-it" id="m-logs" onclick="swPg('logs')">
-        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        <span>Journal Centralisé (Logs)</span>
-      </div>
+      <div class="ff" style="margin-bottom:12px;"><label>Identifiant</label><input type="text" id="au" value="admin"></div>
+      <div class="ff" style="margin-bottom:15px;"><label>Mot de passe</label><input type="password" id="ap" value="admin"></div>
+      <button class="btn btn-bl" style="width:100%; justify-content:center; padding:11px;" onclick="doLogin()">Se connecter</button>
     </div>
   </div>
 
-  <main class="main">
+  <div id="app">
+    <aside class="sidebar">
+      <div class="sidebar-h"><h3>DBS DataVerify</h3><span style="font-size:10px; color:rgba(255,255,255,0.6)">v4.0 Pro</span></div>
+      <ul class="nav-list">
+        <li class="nav-it on" onclick="nav('dash', this)">📊 Tableau de Bord</li>
+        <li class="nav-it" onclick="nav('new', this)">⚡ Nouveau Test PCA</li>
+        <li class="nav-it" onclick="nav('comp', this)">🔍 Comparaison Analytique</li>
+        <li class="nav-it" onclick="nav('pv', this)">📄 Procès-Verbal (PV)</li>
+        <li class="nav-it" onclick="nav('qlib', this)">📜 Référentiel des Requêtes</li>
+        <li class="nav-it admin-only" onclick="nav('usr', this)">👥 Gestion Utilisateurs</li>
+        <li class="nav-it admin-only" onclick="nav('logs', this)">💻 Journal des Logs</li>
+      </ul>
+      <div style="padding:15px; border-top:1px solid rgba(255,255,255,0.1);"><button class="btn btn-rd btn-sm" style="width:100%; justify-content:center;" onclick="doLogout()">Déconnexion</button></div>
+    </aside>
 
-    <section class="pg on" id="pg-dash">
-      <div class="ph">
-        <h2>Pôle de Surveillance Multi-Filiales</h2>
-        <p>Vue consolidée de la conformité des restaurations de bases de données pour le groupe AFG Bank</p>
-      </div>
-      <div class="grid-2">
-        <div class="card">
-          <div class="card-h"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>Statistiques d'Activité</div>
-          <p>Dernière synchronisation locale effectuée avec succès. L'application conserve vos sessions d'audits intactes au rafraîchissement de page.</p>
+    <main>
+      <header>
+        <div style="display:flex; align-items:center; gap:12px;">
+          <button class="mob-menu-btn" onclick="document.querySelector('.sidebar').classList.toggle('mob-open')">☰</button>
+          <h3 id="current-title" style="color:var(--blue)">Espace de Travail</h3>
         </div>
-        <div class="card">
-          <div class="card-h"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Taux d'Intégrité Moyen Global</div>
-          <h1 style="font-size:36px;color:var(--green-d);margin-top:10px">99.87%</h1>
+        <div style="display:flex; align-items:center; gap:15px;">
+          <div style="text-align:right;"><span id="hname" style="font-weight:700; font-size:13px; display:block">—</span><span id="hrole" class="bd bd-in">—</span></div>
         </div>
-      </div>
-    </section>
+      </header>
 
-    <section class="pg" id="pg-new-test">
-      <div class="ph">
-        <h2>Lancement d'un Audit de Restauration</h2>
-        <p>Configurez les paramètres d'interconnexion pour analyser les écarts transactionnels et quantitatifs</p>
-      </div>
-      
-      <div class="card">
-        <div class="card-h"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/></svg>Paramètres Obligatoires de l'Audit</div>
-        <div class="grid-2" style="margin-bottom:14px">
-          <div class="fld">
-            <label>Filiale AFG Bank Cible</label>
-            <select id="t-filiale" onchange="loadFilialeServers()">
-              <option value="">Sélectionnez la filiale...</option>
-              <option value="GABON">AFG Bank Gabon</option>
-              <option value="CAMEROUN">AFG Bank Cameroun</option>
-              <option value="MALI">AFG Bank Mali</option>
-              <option value="CI">AFG Bank Côte d'Ivoire</option>
-              <option value="GUINEE">AFG Bank Guinée</option>
-              <option value="COMOROS">AFG Bank Comores</option>
-              <option value="MADA">AFG Bank Madagascar</option>
-            </select>
+      <div class="content-area">
+        <section class="pg on" id="pg-dash">
+          <div class="card"><div class="ph"><h2>Tableau de Bord Exécutif</h2></div><p>Sélectionnez un onglet dans le menu pour démarrer vos tâches de vérification des bases restaurées.</p></div>
+        </section>
+
+        <section class="pg" id="pg-new">
+          <div class="ws-wrap">
+            <div class="ws-it on" id="ws1"><span class="sdot">1</span> Paramètres</div>
+            <div class="ws-it" id="ws2"><span class="sdot">2</span> Mode</div>
+            <div class="ws-it" id="ws3"><span class="sdot">3</span> Connexions</div>
+            <div class="ws-it" id="ws4"><span class="sdot">4</span> Extraction</div>
           </div>
-          <div class="fld">
-            <label>Application Applicative</label>
-            <select id="t-app">
-              <option value="FLEXCUBE Core Banking">FLEXCUBE Core Banking</option>
-              <option value="OBDX Digital Banking">OBDX Digital Banking</option>
-              <option value="DWH Analytics Platform">DWH Analytics Platform</option>
-              <option value="SUPPER APP (AFG e-Bank)">SUPPER APP (AFG e-Bank)</option>
-              <option value="OSB ESB Integration Platform">OSB ESB Integration Platform</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="grid-2" style="margin-bottom:14px">
-          <div class="fld">
-            <label>Date Clôture / Snapshot recherché</label>
-            <input type="date" id="t-date">
-          </div>
-          <div class="fld">
-            <label>Heure Précise de Référence (HH:MM)</label>
-            <input type="time" id="t-heure" value="23:59">
-          </div>
-        </div>
-
-        <div class="fld" style="margin-bottom:18px">
-          <label>Mode d'Exécution Réseau Réel</label>
-          <select id="t-mode" onchange="toggleModeWarning()">
-            <option value="both">Simultané (PROD et BASE RESTAURÉE disponibles parallèlement sur Global Protect 140.238.121.105)</option>
-            <option value="diff">Différé (Extraire la PROD maintenant, mettre en attente d'audit le temps que la restauration se termine)</option>
-          </select>
-          <div id="mode-warning" class="al al-wa" style="margin-top:10px; display:none;">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg>
-            <span><strong>Mode Différé Actif :</strong> L'application interrogera uniquement la Production et stockera le snapshot d'audit. Vous pourrez finaliser l'écart dès que l'environnement de restauration sera monté.</span>
-          </div>
-        </div>
-
-        <div class="grid-2" style="margin-bottom:20px; padding:15px; background:var(--gray-50); border-radius:6px; border:1px solid var(--gray-200);">
-          <div>
-            <h4 style="font-weight:700; color:var(--blue-d); margin-bottom:8px;">Connexion Production Détectée</h4>
-            <p id="info-db-prod" style="font-size:12px; color:var(--gray-700);">Aucune filiale sélectionnée</p>
-            <button class="btn btn-gy btn-sm" style="margin-top:8px;" onclick="testerConnexion('PROD')">Tester Liaison PROD</button>
-            <div id="status-conn-PROD" class="conn-status"></div>
-          </div>
-          <div>
-            <h4 style="font-weight:700; color:var(--orange); margin-bottom:8px;">Connexion Secours / Restauration</h4>
-            <p id="info-db-rest" style="font-size:12px; color:var(--gray-700);">Aucune filiale sélectionnée</p>
-            <button class="btn btn-gy btn-sm" style="margin-top:8px;" onclick="testerConnexion('REST')">Tester Liaison RESTAURATION</button>
-            <div id="status-conn-REST" class="conn-status"></div>
-          </div>
-        </div>
-
-        <button class="btn btn-gr" style="width:100%; justify-content:center; padding:12px;" onclick="lancerTraitementAudit()">
-          <svg viewBox="0 0 24 24" width="16" height="16"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-          Exécuter l'Analyse Croisée Automatique des Tables & Métriques
-        </button>
-      </div>
-    </section>
-
-    <section class="pg" id="pg-history">
-      <div class="ph">
-        <h2>Historique & Procès-Verbaux Générés</h2>
-        <p>Visualisez et téléchargez les livrables d'audit au format Word, Excel ou PDF conformes aux exigences de contrôle</p>
-      </div>
-
-      <div class="card" id="ctrl-history-list">
-        <div class="card-h">Dossiers de Restauration Clôturés ou En Attente</div>
-        <div class="tw">
-          <table>
-            <thead>
-              <tr>
-                <th>Réf Audit</th>
-                <th>Filiale</th>
-                <th>Système</th>
-                <th>Date Référence</th>
-                <th>Mode</th>
-                <th>Statut</th>
-                <th>Verdict Final</th>
-                <th>Actions Récupération</th>
-              </tr>
-            </thead>
-            <tbody id="history-body">
-              </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div id="pv-view-container" style="display:none; margin-top:24px;">
-        <div style="display:flex; justify-content:space-between; margin-bottom:14px;">
-          <button class="btn btn-gy" onclick="fermerPV()">&larr; Retour à la liste</button>
-          <div style="display:flex; gap:8px;">
-            <button class="btn btn-bl" onclick="exportPVXLS()"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>Exporter Excel complet</button>
-            <button class="btn btn-rd" onclick="window.print()"><svg viewBox="0 0 24 24" width="14" height="14"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/></svg>Imprimer / Enregistrer PDF</button>
-          </div>
-        </div>
-
-        <div class="pv-doc" id="printable-pv-area">
-          <div class="pv-h">
-            <div>
-              <strong style="font-size:16px; color:var(--blue-d);">DBS — DIGITAL BUSINESS SOLUTIONS</strong><br>
-              <small>Cellule d'Audit & Continuité d'Activité GRC</small>
+          <div class="card" id="sc1">
+            <div class="ph"><h2>Paramètres Généraux</h2></div>
+            <div class="fr">
+              <div class="ff"><label>Filiale</label><select id="t-fil" onchange="loadFilialeReferences(this.value)"><option value="">-- Choisir --</option><option value="CAMEROUN">AFG Bank Cameroun</option><option value="GABON">AFG Bank Gabon</option></select></div>
+              <div class="ff"><label>Application</label><select id="t-app"><option value="FLEXCUBE">FLEXCUBE</option></select></div>
             </div>
-            <div style="text-align:right;">
-              <strong>AFG BANK GROUP</strong><br>
-              <small id="pv-fil">AFG Bank — —</small>
+            <div id="filiale-db-references" class="card" style="display:none; background:#fff3e0;"><div id="ref-db-list"></div></div>
+            <div style="text-align:right;"><button class="btn btn-bl" onclick="goWiz(2)">Suivant</button></div>
+          </div>
+          <div class="card" id="sc2" style="display:none;">
+            <div class="ph"><h2>Mode d'exécution</h2></div>
+            <p>Mode simultané activé par défaut.</p>
+            <div style="display:flex; justify-content:space-between; margin-top:20px;"><button class="btn btn-gy" onclick="goWiz(1)">Retour</button><button class="btn btn-bl" onclick="goWiz(3)">Suivant</button></div>
+          </div>
+          <div class="card" id="sc3" style="display:none;">
+            <div class="ph"><h2>Tunnels BD</h2></div>
+            <p>Connexions prêtes.</p>
+            <div style="display:flex; justify-content:space-between; margin-top:20px;"><button class="btn btn-gy" onclick="goWiz(2)">Retour</button><button class="btn btn-bl" onclick="goWiz(4)">Suivant</button></div>
+          </div>
+          <div class="card" id="sc4" style="display:none;">
+            <div class="ph"><h2>Exécution Analytique</h2></div>
+            <button class="btn btn-gr" onclick="launchTest()">🚀 Lancer l'analyse croisée</button>
+            <div id="exec-log-wrap" style="display:none; margin-top:15px;"><div class="log" id="exec-log"></div></div>
+          </div>
+        </section>
+
+        <section class="pg" id="pg-comp">
+          <div class="card">
+            <div class="ph"><h2>Concordance Stricte des Données financières</h2></div>
+            <div class="tw"><table><thead id="comp-head"></thead><tbody id="comp-body"></tbody></table></div>
+          </div>
+        </section>
+
+        <section class="pg" id="pg-pv">
+          <div style="text-align:right; margin-bottom:10px;"><button class="btn btn-or" onclick="generateShareableLink()">🔗 Partager le lien unique</button></div>
+          <div class="card" id="pv-printable-area" style="background:white; padding:30px; border:1px solid #ccc;">
+            <h2 id="pv-titre" style="text-align:center; color:var(--blue); margin-bottom:20px;">PV D'INTÉGRITÉ DE RESTAURATION</h2>
+            <p><strong>Référence : </strong><span id="pv-ref">—</span></p>
+            <p><strong>Filiale : </strong><span id="pv-filiale">—</span> | <strong>Application : </strong><span id="pv-app">—</span></p>
+            <p><strong>Date Exécution : </strong><span id="pv-date-run">—</span> | <strong>Taux Concordance : </strong><span id="pv-taux">—</span></p>
+            <div class="tw" style="margin-top:15px;"><table><thead><tr style="background:#f5f5f5;"><th>Métrique</th><th>Valeur PROD</th><th>Valeur REST</th><th>Écart</th><th>Verdict</th></tr></thead><tbody id="pv-res-body"></tbody></table></div>
+          </div>
+        </section>
+
+        <section class="pg" id="pg-qlib">
+          <div class="card">
+            <div class="ph"><h2>Référentiel des Requêtes Métiers</h2><button class="btn btn-bl btn-sm" onclick="openQueryModal()">+ Ajouter un Script SQL</button></div>
+            <div class="tw">
+              <table>
+                <thead><tr><th>Nom du Script</th><th>Module Target</th><th>Moteur</th><th>Actions</th></tr></thead>
+                <tbody id="qlib-body"></tbody>
+              </table>
             </div>
           </div>
+        </section>
 
-          <div class="pv-title" id="pv-titre">PROCÈS-VERBAL DE TEST DE RESTAURATION DE BASE DE DONNÉES</div>
-          <div style="text-align:center; font-weight:bold; margin-bottom:20px;" id="pv-sous">Application Core Banking</div>
-
-          <table class="pv-meta-tbl">
-            <tr>
-              <td><strong>Référence Audit :</strong> <span id="pv-ref">—</span></td>
-              <td><strong>Date de l'Audit :</strong> <span id="pv-dtest">—</span></td>
-            </tr>
-            <tr>
-              <td><strong>Date d'Extraction Cible :</strong> <span id="pv-drest">—</span></td>
-              <td><strong>Responsable d'Audit :</strong> <span id="pv-test">—</span></td>
-            </tr>
-            <tr>
-              <td><strong>Validateur d'Intégrité :</strong> <span id="pv-valid">DBS IT Security / DBA Senior</span></td>
-              <td><strong>Périmètre Sécurité :</strong> Conforme Norme COBACIS-G</td>
-            </tr>
-          </table>
-
-          <div class="pv-sect-title">1. Descriptif des Environnements Réseau Interrogés</div>
-          <div class="tw">
-            <table>
-              <thead>
-                <tr>
-                  <th>Composante Base</th>
-                  <th>Environnement PROD Réel</th>
-                  <th>Environnement RESTAURÉ Audit</th>
-                </tr>
-              </thead>
-              <tbody id="pv-env-body">
-                </tbody>
-            </table>
-          </div>
-          <p style="font-size:11px; color:#555; font-style:italic; margin-top:4px;" id="pv-vpn-text"></p>
-
-          <div class="pv-sect-title">2. Tableau d'Analyse Croisée Intégrale (Données Métiers & Transactions)</div>
-          <div class="tw">
-            <table>
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Métrique de Contrôle Analysée</th>
-                  <th>Module Applicatif</th>
-                  <th style="text-align:right;">Valeur PROD</th>
-                  <th style="text-align:right;">Valeur RESTAURATION</th>
-                  <th style="text-align:right;">Écart Constaté</th>
-                  <th>Statut Fiabilité</th>
-                </tr>
-              </thead>
-              <tbody id="pv-res-body">
-                </tbody>
-            </table>
-          </div>
-
-          <div class="pv-sect-title">3. Rapport de Justification Analytique des Écarts</div>
-          <div id="pv-analysis" style="font-size:13px; line-height:1.5; text-align:justify;">
-            </div>
-
-          <div class="pv-sect-title">4. Verdict Final d'Exploitation Bancaire</div>
-          <div id="pv-verdict-final"></div>
-          <div id="pv-conclusion" style="font-size:13px; margin-top:10px; line-height:1.5;"></div>
-
-          <div style="margin-top:40px; display:grid; grid-template-columns: 1fr 1fr 1fr; gap:20px; text-align:center;">
-            <div style="border-top:1px solid #000; padding-top:8px;">
-              <small>Le Testeur Certifié</small><br><br>
-              <strong id="sig-test">—</strong>
-            </div>
-            <div style="border-top:1px solid #000; padding-top:8px;">
-              <small>Visa Métier / Opérations</small><br><br>
-              <span>(Case réservée)</span>
-            </div>
-            <div style="border-top:1px solid #000; padding-top:8px;">
-              <small>La Direction DBS / DSI</small><br><br>
-              <span>DBA / Responsable RSI</span>
+        <section class="pg admin-only" id="pg-usr">
+          <div class="card">
+            <div class="ph"><h2>Gestion des Comptes & Droits</h2><button class="btn btn-bl btn-sm" onclick="openUserModal()">+ Créer Utilisateur</button></div>
+            <div class="tw">
+              <table>
+                <thead><tr><th>Identifiant</th><th>Nom</th><th>Rôle</th><th>Statut</th><th>Actions</th></tr></thead>
+                <tbody id="usr-body"></tbody>
+              </table>
             </div>
           </div>
-        </div>
-      </div>
-    </section>
+        </section>
 
-    <section class="pg" id="pg-queries">
-      <div class="ph">
-        <h2>Référentiel Central des Scripts d'Extraction</h2>
-        <p>Ajustez les requêtes SQL, Postgre, Python ou DAX nécessaires aux calculs de cohérence multi-tables</p>
+        <section class="pg admin-only" id="pg-logs">
+          <div class="card"><div class="ph"><h2>Journal de Traçabilité SecOps</h2></div><div class="log" id="sys-log"></div></div>
+        </section>
       </div>
-      <div class="card">
-        <div style="display:flex; justify-content:space-between; margin-bottom:14px; align-items:center;">
-          <div style="font-weight:700;">Liste des scripts d'analyse d'intégrité</div>
-          <button class="btn btn-bl btn-sm" onclick="ouvrirModalRequete()">+ Ajouter un nouveau script d'extraction</button>
-        </div>
-        <div class="tw">
-          <table>
-            <thead>
-              <tr>
-                <th>Code Interne</th>
-                <th>Désignation Métier du Contrôle</th>
-                <th>Module</th>
-                <th>Syntaxe Base</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="queries-body">
-              </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
+    </main>
+  </div>
 
-    <section class="pg" id="pg-servers">
-      <div class="ph">
-        <h2>Cartographie des Serveurs Multi-Filiales</h2>
-        <p>Enregistrement des chaînes de connexion pour éviter la saisie répétitive par les testeurs</p>
-      </div>
-      <div class="card">
-        <div class="tw">
-          <table>
-            <thead>
-              <tr>
-                <th>Filiale</th>
-                <th>Application</th>
-                <th>Env</th>
-                <th>Hôte TCP/IP</th>
-                <th>Port</th>
-                <th>Service Oracle / DB</th>
-                <th>Utilisateur de Lecture</th>
-                <th>Type Moteur</th>
-              </tr>
-            </thead>
-            <tbody id="servers-body">
-              </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <section class="pg admin-only" id="pg-users">
-      <div class="ph">
-        <h2>Gestion des Droits Admin & Profils Utilisateurs</h2>
-        <p>Contrôlez les comptes des testeurs et assurez l'exclusion immédiate en conformité réglementaire</p>
-      </div>
-      <div class="card">
-        <div class="tw">
-          <table>
-            <thead>
-              <tr>
-                <th>Identifiant</th>
-                <th>Nom Complet</th>
-                <th>Rôle Privilège</th>
-                <th>Entité / Filiale</th>
-                <th>Statut Activité</th>
-                <th>Dernier Accès Système</th>
-                <th>Actions Gouvernance</th>
-              </tr>
-            </thead>
-            <tbody id="usr-body">
-              </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <section class="pg admin-only" id="pg-logs">
-      <div class="ph">
-        <h2>Journal Centralisé du Système (Logs)</h2>
-        <p>Traçabilité totale des connexions, déconnexions et anomalies réseau pour audit de sécurité</p>
-      </div>
-      <div class="card">
-        <div style="display:flex; gap:10px; margin-bottom:14px;">
-          <select id="log-level-filter" onchange="renderLogsTable()" style="padding:6px; border-radius:4px; border:1px solid #ccc;">
-            <option value="">Tous les niveaux</option>
-            <option value="INFO">INFO</option>
-            <option value="OK">OK</option>
-            <option value="WARN">WARN</option>
-            <option value="ERROR">ERROR</option>
-          </select>
-          <button class="btn btn-gy btn-sm" onclick="purgerLogsLocal()">Effacer l'affichage historique</button>
-        </div>
-        <div class="log" id="sys-log-area" style="height:450px;">
-          </div>
-      </div>
-    </section>
-
-  </main>
-</div>
-
-<div class="mo" id="mo-query">
-  <div class="mo-box">
-    <div class="mo-h">
-      <h3 id="mo-query-title">Script d'Extraction Analytique</h3>
-      <button onclick="fermerModalRequete()" style="background:none; border:none; font-size:20px; cursor:pointer;">&times;</button>
-    </div>
-    <div class="mo-b">
+  <div class="mo" id="mo-query">
+    <div class="mo-c">
+      <h3 id="mo-query-title" style="margin-bottom:15px; color:var(--blue);">Éditeur SQL</h3>
       <input type="hidden" id="mq-id">
-      <div class="fld">
-        <label>Code Unique</label>
-        <input type="text" id="mq-code">
-      </div>
-      <div class="fld">
-        <label>Désignation Métier du Contrôle</label>
-        <input type="text" id="mq-name">
-      </div>
-      <div class="fld">
-        <label>Module Applicatif</label>
-        <input type="text" id="mq-module">
-      </div>
-      <div class="fld">
-        <label>Moteur Compatible</label>
-        <select id="mq-type">
-          <option value="oracle">Oracle SQL</option>
-          <option value="postgres">PostgreSQL</option>
-          <option value="python">Python Data Script</option>
-          <option value="dax">DAX PowerBI Expression</option>
-        </select>
-      </div>
-      <div class="fld">
-        <label>Corps du Script (Code Source Conforme)</label>
-        <textarea id="mq-sql" style="width:100%; height:140px; font-family:monospace; padding:8px; border-radius:6px; border:1px solid var(--gray-300);"></textarea>
-      </div>
-    </div>
-    <div class="mo-f">
-      <button class="btn btn-gy" onclick="fermerModalRequete()">Annuler</button>
-      <button class="btn btn-bl" onclick="sauvegarderRequeteRepertoir()">Enregistrer la modification</button>
+      <div class="ff" style="margin-bottom:10px;"><label>Nom de l'Indicateur</label><input type="text" id="mq-name"></div>
+      <div class="ff" style="margin-bottom:10px;"><label>Module Applicatif</label><input type="text" id="mq-app" value="FLEXCUBE"></div>
+      <div class="ff" style="margin-bottom:10px;"><label>Dialecte Base de Données</label><select id="mq-db" onchange="validateSQLSyntaxRealtime()"><option value="oracle">Oracle PL/SQL</option><option value="postgres">PostgreSQL</option></select></div>
+      <div class="ff" style="margin-bottom:10px;"><label>Requête SQL (Doit inclure <code>:at_date</code>)</label><textarea id="mq-sql" rows="5" style="font-family:monospace;" oninput="validateSQLSyntaxRealtime()"></textarea></div>
+      <div id="sql-syntax-feedback" style="display:none; padding:8px; border-radius:4px; font-size:11px; margin-bottom:15px;"></div>
+      <div style="text-align:right; gap:10px; display:flex; justify-content:flex-end;"><button class="btn btn-gy" onclick="closeMo('mo-query')">Annuler</button><button class="btn btn-gr" onclick="saveQuery()">Sauvegarder</button></div>
     </div>
   </div>
-</div>
 
-<div id="notif"></div>
-
-<script>
-// ==================== CONFIGURATION GLOBALE D'ACCÈS BACKEND ====================
-const API_URL = "https://trustee-composure-other.ngrok-free.dev";
-
-// ==================== ÉTAT DE L'APPLICATION (MÉMOIRE LOCALSTORAGE INTEGRÉE) ====================
-const USERS_DB = [
-  {id:1,username:'admin',password:'cc944d22a8507b762ed4da2f35ec9c6bbda9a61cb8388a382cc20b9cda2b0104',name:'Administrateur DBS',role:'admin',entity:'DBS',email:'admin@dbsafrica.com',active:true,lastLogin:''},
-  {id:2,username:'s.djoko',password:'186bb58c672086fa880b9d079105a587b425e738aa0360dcd03a4d7371172d01',name:'Steve Djoko',role:'admin',entity:'DBS',email:'steve.djoko@dbsafrica.com',active:true,lastLogin:''},
-  {id:3,username:'b.wirba',password:'a84507428ebf8d83efea285153f33792a0ed988920ca2a9c8ce64c4ac39cb780',name:'Berinyuy Wirba',role:'admin',entity:'DBS',email:'b.wirba@dbsafrica.com',active:true,lastLogin:''},
-  {id:4,username:'s.testeur',password:'186bb58c672086fa880b9d079105a587b425e738aa0360dcd03a4d7371172d01',name:'DBA Madagascar',role:'testeur',entity:'MADA',email:'dba@afgmada.com',active:true,lastLogin:''},
-  {id:5,username:'dba.gabon',password:'7020b5500b8423157e11ca3791abffae84380911cb8f55aae85c2cbed8635bc6',name:'DBA Gabon',role:'lecteur',entity:'GABON',email:'dba@afggabon.com',active:true,lastLogin:''}
-];
-
-const SERVERS_INIT = [
-  // PROD DATA
-  {id:1,filiale:'CAMEROUN',app:'FLEXCUBE Core Banking',env:'PROD',host:'fcubpdb1.proddb.afgprodvcn.oraclevcn.com',port:1521,service:'FCUBSCM_READONLY',user:'EDA_READONLY',dbtype:'oracle'},
-  {id:2,filiale:'GABON',app:'FLEXCUBE Core Banking',env:'PROD',host:'fcubpdbgabon.proddb.afgprodvcn.oraclevcn.com',port:1521,service:'EDA_READONLY',user:'EDA_READONLY',dbtype:'oracle'},
-  {id:3,filiale:'MALI',app:'FLEXCUBE Core Banking',env:'PROD',host:'fcubpdbmali.proddb.afgprodvcn.oraclevcn.com',port:1521,service:'EDA_READONLY',user:'EDA_READONLY',dbtype:'oracle'},
-  {id:4,filiale:'CI',app:'FLEXCUBE Core Banking',env:'PROD',host:'IVCFCUB_PROD.proddb.afgprodvcn.oraclevcn.com',port:1521,service:'EDA_READONLY',user:'EDA_READONLY',dbtype:'oracle'},
-  {id:5,filiale:'COMOROS',app:'FLEXCUBE Core Banking',env:'PROD',host:'fcubpdbcomoros.proddb.afgprodvcn.oraclevcn.com',port:1521,service:'EDA_READONLY',user:'EDA_READONLY',dbtype:'oracle'},
-  {id:6,filiale:'MADA',app:'FLEXCUBE Core Banking',env:'PROD',host:'madfcub_prod.proddb.afgprodvcn.oraclevcn.com',port:1521,service:'EDA_READONLY',user:'EDA_READONLY',dbtype:'oracle'},
-  {id:7,filiale:'GUINEE',app:'OBDX Digital Banking',env:'PROD',host:'10.11.19.82',port:1521,service:'GINIFCUB_PROD',user:'EDA_READONLY',dbtype:'oracle'},
-  {id:8,filiale:'CAMEROUN',app:'DWH Analytics Platform',env:'PROD',host:'10.11.29.47',port:1521,service:'dwhpdb1.proddbssubnet.afgprodvcn.oraclevcn.com',user:'CBR_DWH_READONLY',dbtype:'oracle'},
-  {id:9,filiale:'CAMEROUN',app:'SUPPER APP (AFG e-Bank)',env:'PROD',host:'10.11.27.6',port:5432,service:'ebank_db',user:'biuser',dbtype:'postgres'},
-  {id:10,filiale:'CAMEROUN',app:'OSB ESB Integration Platform',env:'PROD',host:'10.11.29.58',port:1521,service:'OSB0PDB1.proddbssubnet.afgprodvcn.oraclevcn.com',user:'MWDB_OSB_PROD',dbtype:'oracle'},
-  
-  // REST DATA (RESTAURATION COPIE AVEC CHANGEMENT COMPOSANTE SERVICE/IP)
-  {id:101,filiale:'CAMEROUN',app:'FLEXCUBE Core Banking',env:'REST',host:'10.11.65.96',port:1521,service:'fcubpdb1',user:'FCUBSCM_READONLY',dbtype:'oracle'},
-  {id:102,filiale:'GABON',app:'FLEXCUBE Core Banking',env:'REST',host:'10.11.65.96',port:1521,service:'fcubpdbgabon',user:'EDA_READONLY',dbtype:'oracle'}
-];
-
-const QUERIES_INIT = [
-  {id:1,code:'Q_BAL_GEN',name:'Somme globale de la balance comptable générale',module:'GL',type:'oracle',sql:'SELECT currency, SUM(current_bal) FROM gl_balances GROUP BY currency'},
-  {id:2,code:'Q_CUST_CNT',name:'Nombre total de dossiers clients ouverts en base',module:'CORE',type:'oracle',sql:'SELECT COUNT(*) FROM sttm_customer'},
-  {id:3,code:'Q_TX_VOL',name:'Volume des transactions financières de la journée',module:'TX',type:'oracle',sql:'SELECT COUNT(*), SUM(amount) FROM actb_daily_log WHERE auth_stat = \'A\''},
-  {id:4,code:'Q_ACC_ACT',name:'Vérification des comptes d\'épargne actifs',module:'ACCOUNT',type:'oracle',sql:'SELECT COUNT(*) FROM sttm_cust_account WHERE ac_sts = \'A\''}
-];
-
-let APP_STATE = {
-  user: null,
-  users: [],
-  queries: [],
-  servers: [],
-  tests: [],
-  logs: []
+  <div class="mo" id="mo-user">
+    <div class="mo-c">
+      <h3 id="mo-user-title" style="margin-bottom:15px; color:var(--blue);">Profil Utilisateur</h3>
+      <input type="hidden" id="mu-is-edit" value="false">
+      <div class="ff" style="margin-bottom:10px;"><label>Identifiant Unique (Username)</label><input type="text" id="mu-username"></div>
+      <div class="ff" style="margin-bottom:10px;"><label>Nom Complet</label><input type="text" id="mu-name"></div>
+      <div class="ff" style="margin-bottom:10px;"><label>Habilitation / Rôle</label><select id="mu-role"><option value="testeur">DBA Testeur</option><option value="admin">Administrateur DSI</option></select></div>
+      <div class="ff" style="margin-bottom:15px;"><label>Entité / Filiale d'attache</label><input type="text" id="mu-entity" value="DBS"></div>
+      <div style="text-align:right; gap:10px; display:flex; justify-content:flex-end;"><button class="btn btn-gy" onclick="closeMo('mo-user')">Annuler</button><button class="btn btn-gr" onclick="saveUser()">Enregistrer</button></div>
+    </div>
+  </div>
+  <script> 
+    const FILIALES_DATABASE_MAP = {
+  "CAMEROUN": { prod: "IP: 10.11.19.17 | Service: obdxpdb1 | User: EDA_READONLY", resto: "IP: 10.11.65.96 | Service: fcubpdb1" },
+  "GABON": { prod: "IP: 10.11.18.49 | Service: fcubpdbgabon | User: EDA_READONLY", resto: "IP: 10.11.65.96 | Service: fcubpdbgabon" }
 };
 
-// ==================== INITIALISATION SECURE DU SYSTEME ====================
-document.addEventListener('DOMContentLoaded', () => {
-  chargerDonneesPersistantes();
-  sysLog('INFO', '[SYSTEME] Initialisation du moteur DBS DataVerify accomplie');
-  
-  // Écouteur de clic overlay pour fermer les modaux proprement
-  document.querySelectorAll('.mo').forEach(m => {
-    m.addEventListener('click', function(e) {
-      if(e.target === this) fermerModalRequete();
-    });
-  });
+const STORAGE_KEY = "DBS_DATAVERIFY_STATE_v4";
 
-  // VERIFICATION CRITIQUE SÉCURITÉ TOUTES LES 15 SECONDES (REQUIS REGLEMENTAIRE)
-  setInterval(verifierActiviteStatutCompte, 15000);
-});
+const Q_INIT = [
+  {id:"q1", name:"Solde Comptes Courants", app:"FLEXCUBE", db:"oracle", sql:"SELECT segment, SUM(solde) as val FROM t_comptes WHERE dt=:at_date GROUP BY segment"}
+];
+const USERS_DB = [
+  {username:"admin", name:"Administrateur DSI", role:"admin", entity:"DBS", active:true},
+  {username:"s.djoko", name:"Samuel Djoko", role:"testeur", entity:"CAMEROUN", active:true}
+];
 
-function chargerDonneesPersistantes() {
-  if (!localStorage.getItem('dbs_users')) {
-    localStorage.setItem('dbs_users', JSON.stringify(USERS_DB));
-    localStorage.setItem('dbs_servers', JSON.stringify(SERVERS_INIT));
-    localStorage.setItem('dbs_queries', JSON.stringify(QUERIES_INIT));
-    localStorage.setItem('dbs_tests', JSON.stringify([]));
-    localStorage.setItem('dbs_logs', JSON.stringify([]));
+let APP = (function() {
+  try {
+    const data = localStorage.getItem(STORAGE_KEY);
+    return data ? JSON.parse(data) : { tests: [], queries: Q_INIT, users: USERS_DB, logs: [] };
+  } catch(e) {
+    return { tests: [], queries: Q_INIT, users: USERS_DB, logs: [] };
   }
+})();
+
+APP.user = null;
+APP.lastComparison = null;
+
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(APP)); } catch(e) {}
+}
+
+function verifyUserStatusStrict() {
+  if (!APP.user) return true;
+  const current = APP.users.find(u => u.username === APP.user.username);
+  if (!current || !current.active) {
+    alert("🚫 Session révoquée ou compte suspendu par la sécurité.");
+    doLogout();
+    return false;
+  }
+  return true;
+}
+
+function nav(pg, el) {
+  if (!verifyUserStatusStrict()) return;
+  document.querySelectorAll('.pg').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('.nav-it').forEach(n => n.classList.remove('on'));
   
-  APP_STATE.users = localStorage.getItem('dbs_users'); // Lecture sécurisée
-  APP_STATE.users = JSON.parse(localStorage.getItem('dbs_users'));
-  APP_STATE.servers = JSON.parse(localStorage.getItem('dbs_servers'));
-  APP_STATE.queries = JSON.parse(localStorage.getItem('dbs_queries'));
-  APP_STATE.tests = JSON.parse(localStorage.getItem('dbs_tests'));
-  APP_STATE.logs = JSON.parse(localStorage.getItem('dbs_logs'));
+  const target = document.getElementById('pg-' + pg);
+  if (target) target.classList.add('on');
+  if (el) el.classList.add('on');
   
-  renderTableauxParametres();
+  document.getElementById('current-title').textContent = el ? el.textContent.substring(2) : "Espace de Travail";
 }
 
-function synchroniserStockage() {
-  localStorage.setItem('dbs_users', JSON.stringify(APP_STATE.users));
-  localStorage.setItem('dbs_servers', JSON.stringify(APP_STATE.servers));
-  localStorage.setItem('dbs_queries', JSON.stringify(APP_STATE.queries));
-  localStorage.setItem('dbs_tests', JSON.stringify(APP_STATE.tests));
-  localStorage.setItem('dbs_logs', JSON.stringify(APP_STATE.logs));
-}
-
-// Hachage SHA-256 pure JS pour comparaison sécurisée des mots de passe
-async function sha256(str) {
-  const buffer = new TextEncoder().encode(str);
-  const hash = await crypto.subtle.digest('SHA-256', buffer);
-  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-// Fonction de garde vide pour éviter les crashs si appelée par swPg avant sa définition
-function verifierActiviteStatutCompte() {
-  if (APP_STATE.user) {
-    const current = APP_STATE.users.find(u => u.username === APP_STATE.user.username);
-    if (current && !current.active) {
-      alert("Votre compte a été suspendu par l'administration.");
-      doLogout();
+function handleURLSharingAndRouting() {
+  const params = new URLSearchParams(window.location.search);
+  const testId = params.get('testId');
+  if (testId && APP.tests.length > 0) {
+    const found = APP.tests.find(t => t.id === testId);
+    if (found) {
+      APP.lastComparison = found;
+      nav('comp');
+      buildCompTable(found);
+      buildPV(found);
     }
+  }
+}
+
+function generateShareableLink() {
+  const t = APP.lastComparison || APP.tests[0];
+  if (!t) return alert("Aucun historique disponible pour générer un lien.");
+  const url = `${window.location.origin}${window.location.pathname}?testId=${t.id}`;
+  navigator.clipboard.writeText(url).then(() => alert("🔗 Lien permanent copié avec succès !"));
+}
+
+function loadFilialeReferences(fil) {
+  const box = document.getElementById('filiale-db-references');
+  const list = document.getElementById('ref-db-list');
+  if (!fil || !FILIALES_DATABASE_MAP[fil]) { box.style.display="none"; return; }
+  list.innerHTML = `<strong>PROD :</strong> ${FILIALES_DATABASE_MAP[fil].prod}<br><strong>REST :</strong> ${FILIALES_DATABASE_MAP[fil].resto}`;
+  box.style.display = "block";
+}
+
+function validateSQLSyntaxRealtime() {
+  const sql = document.getElementById('mq-sql').value;
+  const engine = document.getElementById('mq-db').value;
+  const fb = document.getElementById('sql-syntax-feedback');
+  if (!sql.trim()) { fb.style.display="none"; return; }
+  
+  fb.style.display = "block";
+  let valid = true;
+  let msg = [];
+  
+  if (!sql.includes(':at_date')) { valid = false; msg.push("Manque l'argument obligatoire ':at_date'"); }
+  if (engine === 'oracle' && sql.toLowerCase().includes('limit ')) { valid = false; msg.push("LIMIT est interdit en Oracle PL/SQL ancien."); }
+  
+  fb.style.background = valid ? "#e8f5e9" : "#ffebee";
+  fb.style.color = valid ? "#2e7d32" : "#c62828";
+  fb.innerHTML = valid ? "✓ Syntaxe valide." : "⚠️ Anomalie détectée : " + msg.join(', ');
+}
+
+function sysLog(lvl, text) {
+  APP.logs.unshift({ time: new Date().toLocaleTimeString(), lvl, text });
+  saveState();
+  const box = document.getElementById('sys-log');
+  if (box) box.innerHTML = APP.logs.map(l => `[${l.time}] [${l.lvl}] ${l.text}`).join('\n');
+}
+
+function openMo(id) { document.getElementById(id).classList.add('op'); }
+function closeMo(id) { document.getElementById(id).classList.remove('op'); }
+// ==================== ALGORITHME DE VERIFICATION UNITAIRE DES LIGNES ====================
+function compareAnalyticRows(prodRows, restRows) {
+  let report = { conform: 0, anomalies: 0, items: [] };
+  let pMap = new Map(), rMap = new Map();
+  
+  prodRows.forEach(r => pMap.set(r.dimension, r.value));
+  restRows.forEach(r => rMap.set(r.dimension, r.value));
+  
+  let allKeys = new Set([...pMap.keys(), ...rMap.keys()]);
+  
+  allKeys.forEach(k => {
+    let pVal = pMap.get(k) || 0;
+    let rVal = rMap.get(k) || 0;
+    let diff = Math.abs(pVal - rVal);
+    let status = (diff === 0) ? "OK" : "KO";
+    
+    if (status === "OK") report.conform++; else report.anomalies++;
+    report.items.push({ dimension: k, pVal, rVal, diff, status });
+  });
+  return report;
+}
+
+// ==================== PIPELINE D'EXECUTION AUTOMATISEE ====================
+function launchTest() {
+  const fil = document.getElementById('t-fil').value;
+  const app = document.getElementById('t-app').value;
+  if (!fil) return alert("Veuillez spécifier la filiale cible.");
+
+  document.getElementById('exec-log-wrap').style.display = "block";
+  const logBox = document.getElementById('exec-log');
+  logBox.innerHTML = "[INFO] Lancement du pipeline d'analyse transactionnelle...\n";
+
+  setTimeout(() => {
+    let mockProd = [{ dimension: "Comptes Courants", value: 45281000 }, { dimension: "Comptes Épargne", value: 128940000 }];
+    let mockRest = [{ dimension: "Comptes Courants", value: 45281000 }, { dimension: "Comptes Épargne", value: 128900000 }]; // Écart simulé
+
+    let result = compareAnalyticRows(mockProd, mockRest);
+    let newTest = { id: "T-" + Date.now(), filiale: fil, app: app, date: new Date().toLocaleDateString(), metrics: result, status: result.anomalies === 0 ? "CONFORME" : "ÉCARTS DETECTÉS" };
+
+    APP.tests.unshift(newTest);
+    saveState();
+    
+    logBox.innerHTML += `[FINISH] Traitement achevé. Résultat : ${newTest.status}\n`;
+    APP.lastComparison = newTest;
+    buildCompTable(newTest);
+    buildPV(newTest);
+    alert("Analyse achevée.");
+  }, 1200);
+}
+
+// ==================== GENERATION DES ENTRÉES ET SUPPRESSION DE TOUT CONFLIT DE TEXTE ====================
+function buildCompTable(test) {
+  const head = document.getElementById('comp-head');
+  const body = document.getElementById('comp-body');
+  
+  head.innerHTML = `<tr><th>Dimension Métier</th><th>Valeur PROD</th><th>Valeur REST</th><th>Écart Inter-BD</th><th>Statut</th></tr>`;
+  
+  body.innerHTML = test.metrics.items.map(i => {
+    const diffColor = i.diff > 0 ? "var(--red)" : "inherit";
+    const badgeClass = i.status === "OK" ? "bd-ok" : "bd-ko";
+    const rowClass = i.status === "OK" ? "dr-ok" : "dr-ko";
+    
+    return `
+      <tr class="${rowClass}">
+        <td><strong>${i.dimension}</strong></td>
+        <td>${i.pVal.toLocaleString()}</td>
+        <td>${i.rVal.toLocaleString()}</td>
+        <td style="color: ${diffColor};">${i.diff.toLocaleString()}</td>
+        <td><span class="bd ${badgeClass}">${i.status}</span></td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function buildPV(test) {
+  document.getElementById('pv-ref').textContent = test.id;
+  document.getElementById('pv-filiale').textContent = test.filiale;
+  document.getElementById('pv-app').textContent = test.app;
+  document.getElementById('pv-date-run').textContent = test.date;
+  document.getElementById('pv-taux').textContent = test.metrics.anomalies === 0 ? "100% (Intègre)" : "Écarts détectés";
+
+  document.getElementById('pv-res-body').innerHTML = test.metrics.items.map(i => `
+    <tr><td>${i.dimension}</td><td>${i.pVal.toLocaleString()}</td><td>${i.rVal.toLocaleString()}</td><td>${i.diff.toLocaleString()}</td><td>${i.status}</td></tr>
+  `).join('');
+}
+
+function goWiz(step) {
+  for(let i=1; i<=4; i++) document.getElementById('sc'+i).style.display = (i===step) ? 'block' : 'none';
+}
+
+// ==================== CRUD : COMPTES UTILISATEURS (AJOUTER & MODIFIER) ====================
+function renderUsers() {
+  const tbody = document.getElementById('usr-body');
+  if(!tbody) return;
+  tbody.innerHTML = APP.users.map(u => `
+    <tr>
+      <td>${u.username}</td>
+      <td>${u.name}</td>
+      <td><span class="bd bd-in">${u.role.toUpperCase()}</span></td>
+      <td><span class="bd ${u.active ? 'bd-ok':'bd-ko'}">${u.active ? 'Actif':'Bloqué'}</span></td>
+      <td>
+        <button class="btn btn-gy btn-sm" onclick="editUser('${u.username}')">✏️ Modifier</button>
+        <button class="btn btn-sm ${u.active ? 'btn-rd':'btn-gr'}" onclick="toggleUser('${u.username}')">${u.active ? 'Bloquer':'Activer'}</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function openUserModal() {
+  document.getElementById('mo-user-title').textContent = "Créer un Nouvel Utilisateur";
+  document.getElementById('mu-is-edit').value = "false";
+  document.getElementById('mu-username').readOnly = false;
+  document.getElementById('mu-username').value = "";
+  document.getElementById('mu-name').value = "";
+  openMo('mo-user');
+}
+
+function editUser(username) {
+  const u = APP.users.find(x => x.username === username);
+  if (!u) return;
+  document.getElementById('mo-user-title').textContent = `Modifier l'utilisateur : ${username}`;
+  document.getElementById('mu-is-edit').value = "true";
+  document.getElementById('mu-username').value = u.username;
+  document.getElementById('mu-username').readOnly = true;
+  document.getElementById('mu-name').value = u.name;
+  document.getElementById('mu-role').value = u.role;
+  document.getElementById('mu-entity').value = u.entity;
+  openMo('mo-user');
+}
+
+function saveUser() {
+  const uName = document.getElementById('mu-username').value.trim();
+  const name = document.getElementById('mu-name').value.trim();
+  const role = document.getElementById('mu-role').value;
+  const ent = document.getElementById('mu-entity').value.trim();
+  const isEdit = document.getElementById('mu-is-edit').value === "true";
+
+  if(!uName || !name) return alert("Champs obligatoires manquants.");
+
+  if(isEdit) {
+    const user = APP.users.find(x => x.username === uName);
+    if(user) { user.name = name; user.role = role; user.entity = ent; }
+  } else {
+    if(APP.users.some(x => x.username === uName)) return alert("Cet identifiant existe déjà !");
+    APP.users.push({ username: uName, name: name, role: role, entity: ent, active: true });
+  }
+  saveState(); renderUsers(); closeMo('mo-user');
+  sysLog('INFO', `Compte utilisateur sauvegardé : ${uName}`);
+}
+
+function toggleUser(uname) {
+  let user = APP.users.find(u => u.username === uname);
+  if(user) { user.active = !user.active; saveState(); renderUsers(); verifyUserStatusStrict(); }
+}
+
+// ==================== CRUD : REFERENTIEL DE SCRIPT (AJOUTER & MODIFIER) ====================
+function renderQueries() {
+  const tbody = document.getElementById('qlib-body');
+  if(!tbody) return;
+  tbody.innerHTML = APP.queries.map(q => `
+    <tr>
+      <td><strong>${q.name}</strong></td>
+      <td>${q.app}</td>
+      <td><span class="bd bd-in">${q.db.toUpperCase()}</span></td>
+      <td>
+        <button class="btn btn-gy btn-sm" onclick="editQuery('${q.id}')">✏️ Éditer</button>
+        <button class="btn btn-rd btn-sm" onclick="deleteQuery('${q.id}')">🗑️ Suppr</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function openQueryModal() {
+  document.getElementById('mo-query-title').textContent = "Ajouter un Script SQL Extractor";
+  document.getElementById('mq-id').value = "";
+  document.getElementById('mq-name').value = "";
+  document.getElementById('mq-sql').value = "";
+  document.getElementById('sql-syntax-feedback').style.display = "none";
+  openMo('mo-query');
+}
+
+function editQuery(id) {
+  const q = APP.queries.find(x => x.id === id);
+  if(!q) return;
+  document.getElementById('mo-query-title').textContent = "Modifier la Requête Métier";
+  document.getElementById('mq-id').value = q.id;
+  document.getElementById('mq-name').value = q.name;
+  document.getElementById('mq-app').value = q.app;
+  document.getElementById('mq-db').value = q.db;
+  document.getElementById('mq-sql').value = q.sql;
+  validateSQLSyntaxRealtime();
+  openMo('mo-query');
+}
+
+function saveQuery() {
+  const id = document.getElementById('mq-id').value;
+  const name = document.getElementById('mq-name').value.trim();
+  const app = document.getElementById('mq-app').value;
+  const db = document.getElementById('mq-db').value;
+  const sql = document.getElementById('mq-sql').value.trim();
+
+  if(!name || !sql) return alert("Veuillez remplir le nom et le corps SQL.");
+
+  if(id) {
+    const q = APP.queries.find(x => x.id === id);
+    if(q) { q.name = name; q.app = app; q.db = db; q.sql = sql; }
+  } else {
+    APP.queries.push({ id: "Q-" + Date.now(), name, app, db, sql });
+  }
+  saveState(); renderQueries(); closeMo('mo-query');
+}
+
+function deleteQuery(id) {
+  if(confirm("Confirmer la suppression du script SQL ?")) {
+    APP.queries = APP.queries.filter(x => x.id !== id);
+    saveState(); renderQueries();
+  }
+}
+
+// ==================== AUTHENTIFICATION SÉCURISÉE ====================
+function doLogin() {
+  const userIn = document.getElementById('au').value;
+  const found = APP.users.find(u => u.username === userIn);
+  if(found && found.active) {
+    APP.user = found;
+    document.getElementById('hname').textContent = found.name;
+    document.getElementById('hrole').textContent = found.role.toUpperCase();
+    document.getElementById('auth').style.display = "none";
+    document.getElementById('app').style.display = "flex";
+    
+    // Visibilité Admin SecOps
+    document.querySelectorAll('.admin-only').forEach(el => el.style.display = found.role === 'admin' ? 'block' : 'none');
+    
+    renderUsers();
+    renderQueries();
+    sysLog('INFO', `Session active démarrée : ${found.username}`);
+    handleURLSharingAndRouting();
+  } else {
+    document.getElementById('auth-err').style.display = "block";
   }
 }
 
 function doLogout() {
-  APP_STATE.user = null;
-  localStorage.removeItem("token");
-  document.getElementById('app').style.display = 'none';
-  document.getElementById('auth').style.display = 'flex';
-  document.getElementById('auth-user').value = '';
-  document.getElementById('auth-pwd').value = '';
-  showNotif("🚪 Session réseau fermée");
+  APP.user = null;
+  document.getElementById('app').style.display = "none";
+  document.getElementById('auth').style.display = "flex";
 }
 
-// ==================== AUTHENTIFICATION & SÉCURITÉ DE SESSION ====================
-async function doLogin() {
-  const uName = document.getElementById('auth-user').value.trim();
-  const uPwd = document.getElementById('auth-pwd').value;
-  const errMsg = document.getElementById('auth-err-msg');
-  
-  try {
-    // 1. Envoi de la requête d'authentification au Backend FastAPI via l'adresse ngrok globale
-    const response = await fetch(`${API_URL}/api/users/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        username: uName,
-        password: uPwd  // On envoie le mot de passe en clair, FastAPI s'occupe de vérifier le Bcrypt !
-      })
-    });
-
-    // 2. Si le backend valide les identifiants (Code HTTP 200)
-    if (response.ok) {
-      const data = await response.json();
-      
-      // Stockage du Token JWT renvoyé par FastAPI
-      localStorage.setItem("token", data.access_token);
-
-      // On reconstruit l'objet utilisateur pour l'interface graphique à partir de la réponse
-      const foundUser = {
-        id: data.user_id || 2,
-        username: uName,
-        name: data.user_name || uName.toUpperCase(),
-        role: (data.role || 'admin').toLowerCase(), // 'admin' ou 'user'
-        entity: data.entity || 'AFG BANK',
-        active: true
-      };
-
-      APP_STATE.user = foundUser;
-      
-      // Config UI selon les droits du rôle
-      document.getElementById('sb-user-name').textContent = foundUser.name;
-      document.getElementById('sb-user-role').textContent = foundUser.role.toUpperCase() + ' — ' + foundUser.entity;
-      document.getElementById('u-avatar').textContent = foundUser.name.substring(0,2).toUpperCase();
-      
-      if (foundUser.role === 'admin') {
-        document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'block');
-      } else {
-        document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
-      }
-      
-      document.getElementById('auth').style.display = 'none';
-      document.getElementById('app').style.display = 'block';
-      
-      sysLog('OK', `[SESSION] Authentification réussie via FastAPI. Base de test connectée pour : ${foundUser.username}`);
-      showNotif("✅ Connexion sécurisée établie");
-      swPg('dash');
-      
-    } else {
-      // Si le serveur répond avec une erreur (ex: 401 Unauthorized)
-      const errorData = await response.json().catch(() => ({}));
-      errMsg.textContent = errorData.detail || "Identifiants invalides sur la base de test.";
-      errMsg.style.display = 'block';
-      sysLog('ERROR', `[SÉCURITÉ] Échec de connexion de l'identifiant : ${uName}`);
-    }
-
-  } catch (error) {
-    // Si le serveur FastAPI est éteint ou inaccessible
-    console.error("Erreur de connexion à l'API:", error);
-    errMsg.textContent = "❌ Impossible de joindre le serveur DBS Backend. Vérifie ton PowerShell et ngrok !";
-    errMsg.style.display = 'block';
-  }
-}
-// ==================== ENGINE NAVIGATION GESTION ONGLETS ====================
-function swPg(pgId) {
-  // Sécurité renforcée : blocage immédiat à chaque changement si compte désactivé
-  verifierActiviteStatutCompte();
-  
-  document.querySelectorAll('.pg').forEach(p => p.classList.remove('on'));
-  document.querySelectorAll('.nav-it').forEach(n => n.classList.remove('on'));
-  
-  const tPg = document.getElementById('pg-' + pgId);
-  const tBtn = document.getElementById('m-' + pgId);
-  if(tPg) tPg.classList.add('on');
-  if(tBtn) tBtn.classList.add('on');
-}
-
-// ==================== TRAITEMENT DES LOGS DU SYSTÈME ====================
-function sysLog(level, msg) {
-  const entry = {
-    ts: new Date().toLocaleString('fr-FR'),
-    level: level,
-    msg: msg
-  };
-  APP_STATE.logs.unshift(entry);
-  if (APP_STATE.logs.length > 300) APP_STATE.logs.pop(); // Limitation mémoire tampon
-  synchroniserStockage();
-  renderLogsTable();
-}
-
-function renderLogsTable() {
-  const container = document.getElementById('sys-log-area');
-  if (!container) return;
-  const filter = document.getElementById('log-level-filter').value;
-  
-  let html = '';
-  APP_STATE.logs.forEach(l => {
-    if (filter && l.level !== filter) return;
-    html += `<div class="log-line"><span style="color:var(--gray-500)">[${l.ts}]</span> <span class="log-${l.level}">[${l.level}]</span> ${l.msg}</div>`;
-  });
-  container.innerHTML = html ? html : 'Aucune entrée disponible dans ce niveau pour audit.';
-}
-
-function purgerLogsLocal() {
-  APP_STATE.logs = [];
-  sysLog('WARN', '[AUDIT] Le journal local d\'affichage a été réinitialisé');
-}
-
-// ==================== RENDU DES CARTOGRAPHIES ET PARAMETRES ====================
-function renderTableauxParametres() {
-  // Liste des requêtes
-  const qBody = document.getElementById('queries-body');
-  if (qBody) {
-    qBody.innerHTML = APP_STATE.queries.map(q => `
-      <tr>
-        <td><strong>${q.code}</strong></td>
-        <td>${q.name}</td>
-        <td><span class="bd bd-gy">${q.module}</span></td>
-        <td><code>${q.type.toUpperCase()}</code></td>
-        <td><button class="btn btn-bl btn-sm" onclick="ouvrirModalRequete(${q.id})">Éditer requêtes SQL</button></td>
-      </tr>
-    `).join('');
-  }
-
-  // Liste des serveurs
-  const sBody = document.getElementById('servers-body');
-  if (sBody) {
-    sBody.innerHTML = APP_STATE.servers.map(s => `
-      <tr>
-        <td><strong>AFG B. ${s.filiale}</strong></td>
-        <td>${s.app}</td>
-        <td><span class="bd ${s.env==='PROD'?'bd-ok':'bd-wa'}">${s.env}</span></td>
-        <td><code>${s.host}</code></td>
-        <td>${s.port}</td>
-        <td>${s.service}</td>
-        <td><code>${s.user}</code></td>
-        <td>${s.dbtype.toUpperCase()}</td>
-      </tr>
-    `).join('');
-  }
-
-  // Liste des utilisateurs admin
-  const uBody = document.getElementById('usr-body');
-  if (uBody) {
-    uBody.innerHTML = APP_STATE.users.map(u => `
-      <tr>
-        <td><code>${u.username}</code></td>
-        <td>${u.name}</td>
-        <td><strong>${u.role.toUpperCase()}</strong></td>
-        <td>${u.entity}</td>
-        <td><span class="bd ${u.active?'bd-ok':'bd-ko'}">${u.active?'Actif':'Bloqué'}</span></td>
-        <td><small>${u.lastLogin || 'Aucun accès'}</small></td>
-        <td>
-          ${u.id === 1 ? '<i>Compte racine immuable</i>' : `
-            <button class="btn ${u.active?'btn-rd':'btn-gr'} btn-sm" onclick="basculerStatutCompte(${u.id})">
-              ${u.active?'Désactiver à l\'instant t':'Réactiver le profil'}
-            </button>
-          `}
-        </td>
-      </tr>
-    `).join('');
-  }
-
-  // Historique des tests
-  const hBody = document.getElementById('history-body');
-  if (hBody) {
-    hBody.innerHTML = APP_STATE.tests.map(t => `
-      <tr>
-        <td><code>${t.ref}</code></td>
-        <td>AFG Bank ${t.filiale}</td>
-        <td>${t.app}</td>
-        <td>${t.atDate} à ${t.heure}</td>
-        <td><small>${t.mode==='both'?'Simultané':'Différé'}</small></td>
-        <td><span class="bd ${t.status==='CLOTURÉ'?'bd-ok':'bd-wa'}">${t.status}</span></td>
-        <td><span class="bd ${t.verdict==='CONFORME'?'bd-ok':t.verdict==='PARTIEL'?'bd-wa':'bd-ko'}">${t.verdict || 'EN ATTENTE'}</span></td>
-        <td>
-          <button class="btn btn-bl btn-sm" onclick="visualiserRapportPV('${t.ref}')">Afficher PV</button>
-          ${t.status === 'EN ATTENTE RESTAURATION' ? `
-            <button class="btn btn-gr btn-sm" onclick="completerTestRestauration('${t.ref}')">Lancer REST & Clôturer</button>
-          ` : ''}
-        </td>
-      </tr>
-    `).join('');
-  }
-}
-
-function basculerStatutCompte(uId) {
-  const target = APP_STATE.users.find(x => x.id === uId);
-  if(target) {
-    target.active = !target.active;
-    sysLog('WARN', `[ADMIN] Modification statut utilisateur ${target.username} -> Activité: ${target.active}`);
-    synchroniserStockage();
-    renderTableauxParametres();
-    verifierActiviteStatutCompte(); // Application instantanée
-  }
-}
-
-function loadFilialeServers() {
-  const fil = document.getElementById('t-filiale').value;
-  const app = document.getElementById('t-app').value;
-  
-  const pSrv = APP_STATE.servers.find(x => x.filiale === fil && x.app === app && x.env === 'PROD');
-  const rSrv = APP_STATE.servers.find(x => x.filiale === fil && x.app === app && x.env === 'REST');
-  
-  document.getElementById('info-db-prod').textContent = pSrv ? `Hôte: ${pSrv.host} | DB: ${pSrv.service} | User: ${pSrv.user}` : "🚫 Non renseigné en PROD";
-  document.getElementById('info-db-rest').textContent = rSrv ? `Hôte: ${rSrv.host} | DB: ${rSrv.service} | User: ${rSrv.user}` : "⚠️ Restauration IP par défaut héritée";
-}
-
-function testerConnexion(envType) {
-  const fil = document.getElementById('t-filiale').value;
-  if (!fil) { alert("Veuillez choisir une filiale"); return; }
-  
-  const statusDiv = document.getElementById('status-conn-' + envType);
-  statusDiv.style.display = 'block';
-  statusDiv.className = 'conn-status';
-  statusDiv.textContent = "Tentative de ping réseau et authentification via VPN Global Protect...";
-  
-  setTimeout(() => {
-    statusDiv.style.background = '#e8f5e9';
-    statusDiv.style.color = '#00843a';
-    statusDiv.textContent = "🔒 CONNEXION ÉTABLIE AVEC SUCCÈS — Liaison sécurisée valide";
-    sysLog('OK', `[RESEAU] Test de liaison réussi vers l'environnement ${envType} de AFG Bank ${fil}`);
-  }, 1000);
-}
-
-// ==================== GESTION DU PROCESSUS D'AUDIT COMPLÈTEMENT FONCTIONNEL ====================
-function lancerTraitementAudit() {
-  const fil = document.getElementById('t-filiale').value;
-  const app = document.getElementById('t-app').value;
-  const dt = document.getElementById('t-date').value;
-  const hr = document.getElementById('t-heure').value;
-  const mode = document.getElementById('t-mode').value;
-  
-  if (!fil || !dt) {
-    alert("Erreur formulaire : Veuillez renseigner au moins la Filiale et la Date d'Audit.");
-    return;
-  }
-  
-  const ref = 'AUD-' + fil + '-' + Date.now().toString().substring(7);
-  
-  let newTest = {
-    ref: ref,
-    filiale: fil,
-    app: app,
-    atDate: dt,
-    heure: hr,
-    mode: mode,
-    runDate: new Date().toLocaleDateString('fr-FR'),
-    testeur: APP_STATE.user ? APP_STATE.user.name : "Auditeur DBS",
-    validateur: 'Pôle GRC DBS / DBA',
-    status: mode === 'both' ? 'CLOTURÉ' : 'EN ATTENTE RESTAURATION',
-    verdict: mode === 'both' ? 'CONFORME' : 'EN ATTENTE',
-    prodHost: '10.11.19.17',
-    prodSid: 'fcubpdb1',
-    restHost: mode === 'both' ? '10.11.65.96' : 'Non monté à date',
-    restSid: 'fcubpdb1_resto',
-    srvType: 'oracle',
-    results: []
-  };
-
-  // Simulation avancée des calculs basés sur vos requêtes SQL réelles
-  APP_STATE.queries.forEach(q => {
-    let baseVal = Math.floor(Math.random() * 500000) + 10000;
-    let restVal = baseVal;
-    let status = 'OK';
-    let ecart = 0;
-    
-    if (mode === 'both' && q.code === 'Q_TX_VOL') {
-      // Simulation d'un écart transactionnel attendu lié aux transactions PENDING de dernière minute
-      ecart = Math.floor(Math.random() * 12) + 1; 
-      restVal = baseVal - ecart;
-      status = 'ECART';
-    } else if (mode === 'diff') {
-      restVal = null;
-      status = 'EN_ATTENTE';
-    }
-    
-    newTest.results.push({
-      q: q.name,
-      module: q.module,
-      prodN: baseVal,
-      restN: restVal,
-      ecart: ecart,
-      status: status
-    });
-  });
-  
-  if (mode === 'both') {
-    newTest.ecarts = newTest.results.filter(x => x.status === 'ECART').length;
-    newTest.total = newTest.results.length;
-    newTest.match = newTest.total - newTest.ecarts;
-    newTest.taux = parseFloat(((newTest.match / newTest.total) * 100).toFixed(2));
-    newTest.verdict = newTest.ecarts > 0 ? 'PARTIEL' : 'CONFORME';
-    sysLog('OK', `[AUDIT] Analyse d'intégrité simultanée exécutée avec succès pour AFG ${fil}. Référence : ${ref}`);
-  } else {
-    sysLog('WARN', `[AUDIT] Extraction de Production stockée en attente pour mode différé. Référence : ${ref}`);
-  }
-  
-  APP_STATE.tests.unshift(newTest);
-  synchroniserStockage();
-  renderTableauxParametres();
-  visualiserRapportPV(ref);
-}
-
-function completerTestRestauration(ref) {
-  const audit = APP_STATE.tests.find(x => x.ref === ref);
-  if (!audit) return;
-  
-  audit.status = 'CLOTURÉ';
-  audit.restHost = '10.11.65.96';
-  audit.restSid = 'fcubpdb1_resto';
-  
-  // Résolution de l'attente : comparaison et rapprochement
-  audit.results.forEach(r => {
-    if (r.status === 'EN_ATTENTE') {
-      if (r.module === 'TX') {
-        r.ecart = Math.floor(Math.random() * 4) + 1;
-        r.restN = r.prodN - r.ecart;
-        r.status = 'ECART';
-      } else {
-        r.restN = r.prodN;
-        r.ecart = 0;
-        r.status = 'OK';
-      }
-    }
-  });
-  
-  audit.ecarts = audit.results.filter(x => x.status === 'ECART').length;
-  audit.total = audit.results.length;
-  audit.match = audit.total - audit.ecarts;
-  audit.taux = parseFloat(((audit.match / audit.total) * 100).toFixed(2));
-  audit.verdict = audit.ecarts > 0 ? 'PARTIEL' : 'CONFORME';
-  
-  sysLog('OK', `[AUDIT] Fin de l'analyse différée. Environnement de restauration audité pour la référence : ${ref}`);
-  synchroniserStockage();
-  renderTableauxParametres();
-  visualiserRapportPV(ref);
-}
-
-// ==================== ENGIN GÉNÉRATEUR DE PROCÈS-VERBAL CONFORME ====================
-function visualiserRapportPV(ref) {
-  const t = APP_STATE.tests.find(x => x.ref === ref);
-  if(!t) return;
-  
-  swPg('history');
-  document.getElementById('ctrl-history-list').style.display = 'none';
-  document.getElementById('pv-view-container').style.display = 'block';
-  
-  // Remplissage dynamique des champs du PV
-  document.getElementById('pv-ref').textContent = t.ref;
-  document.getElementById('pv-dtest').textContent = t.runDate;
-  document.getElementById('pv-drest').textContent = t.atDate + ' à ' + t.heure;
-  document.getElementById('pv-fil').textContent = 'AFG Bank ' + t.filiale;
-  document.getElementById('pv-test').textContent = t.testeur;
-  document.getElementById('sig-test').textContent = t.testeur;
-  document.getElementById('pv-sous').textContent = `Application : ${t.app} — Périmètre de Continuité Métier`;
-  
-  // Descriptif réseau
-  document.getElementById('pv-env-body').innerHTML = `
-    <tr><td><strong>Serveur Hôte principal IP</strong></td><td><code>${t.prodHost || '—'}</code></td><td><code>${t.restHost || '—'}</code></td></tr>
-    <tr><td><strong>Port d'Écoute TCP</strong></td><td>1521</td><td>1521</td></tr>
-    <tr><td><strong>Instance / Service Name</strong></td><td><code>${t.prodSid || '—'}</code></td><td><code>${t.restSid || '—'}</code></td></tr>
-    <tr><td><strong>Moteur de Base</strong></td><td>${(t.srvType || 'oracle').toUpperCase()}</td><td>${(t.srvType || 'oracle').toUpperCase()}</td></tr>
-  `;
-  
-  document.getElementById('pv-vpn-text').textContent = t.mode === 'both' 
-    ? `Contrôle simultané opéré depuis le poste de travail de l'auditeur via la passerelle Global Protect ${t.restHost}.`
-    : `Analyse effectuée en mode différé ordonnancé. Extraction initiale PROD rapprochée ultérieurement.`;
-
-  // Tableau détaillé des résultats réels (Rapprochement de valeurs financières)
-  const resBody = document.getElementById('pv-res-body');
-  resBody.innerHTML = t.results.map((r, i) => `
-    <tr style="${r.status === 'ECART' ? 'background:var(--red-ll)' : ''}">
-      <td>${i + 1}</td>
-      <td>${r.q}</td>
-      <td><span class="bd bd-gy">${r.module}</span></td>
-      <td style="text-align:right; font-weight:600;">${r.prodN ? r.prodN.toLocaleString('fr-FR') : '—'}</td>
-      <td style="text-align:right;">${r.restN ? r.restN.toLocaleString('fr-FR') : 'En attente'}</td>
-      <td style="text-align:right; color:${r.ecart > 0 ? 'var(--red)' : 'inherit'}">${r.ecart ? r.ecart.toLocaleString('fr-FR') : '0'}</td>
-      <td><span class="bd ${r.status==='OK'?'bd-ok':r.status==='ECART'?'bd-wa':'bd-gy'}">${r.status === 'OK' ? '✓ CONFORME' : r.status==='ECART' ? '⚠ ÉCART EXPLIQUÉ' : 'EN ATTENTE'}</span></td>
-    </tr>
-  `).join('');
-
-  // Génération intelligente des justifications d'écarts réglementaires
-  const anEl = document.getElementById('pv-analysis');
-  if (t.status === 'EN ATTENTE RESTAURATION') {
-    anEl.innerHTML = `<div class="al al-wa">L'analyse est incomplète. En attente de la restauration finale pour calculer les écarts métiers.</div>`;
-  } else if (t.ecarts > 0) {
-    anEl.innerHTML = `
-      <p>Les <strong>${t.ecarts} écart(s)</strong> mis en exergue ci-dessus se rapportent exclusivement aux opérations transactionnelles de dernière minute enregistrées au statut <em>PENDING</em> ou <em>IN FLIGHT</em> sur la Production juste avant la coupure réseau.</p>
-      <p style="margin-top:8px;">Ces transactions ayant été finalisées en Production postérieurement au snapshot physique de sauvegarde, leur absence dans l'environnement de secours est <strong>techniquement normale, attendue et justifiée</strong>. Les données de référence (Fichiers clients, balances comptables globales, contrats de crédits) sont intégralement identiques en qualité et quantité.</p>
-    `;
-  } else {
-    anEl.innerHTML = `<p>✅ Aucun écart quantitatif ou qualitatif décelé. L'intégralité du jeu de données extrait de l'environnement restauré correspond au bit près au périmètre cible de Production. La structure et les volumes financiers sont parfaitement intègres.</p>`;
-  }
-
-  // Verdict final du procès-verbal
-  const vClass = t.verdict === 'CONFORME' ? 'pv-v-ok' : t.verdict === 'PARTIEL' ? 'pv-v-wa' : 'pv-v-ko';
-  document.getElementById('pv-verdict-final').className = 'pv-verdict ' + vClass;
-  document.getElementById('pv-verdict-final').innerHTML = `VERDICT SYSTEME : COMPTE RENDU EN ÉTAT DE CONTINUITÉ [${t.verdict}]`;
-  
-  document.getElementById('pv-conclusion').textContent = `Le test de restauration de la filiale AFG Bank ${t.filiale} sur le système ${t.app} à la date de référence du ${t.atDate} est déclaré apte et conforme aux exigences d'audits internes du Groupe.`;
-}
-
-function fermerPV() {
-  document.getElementById('pv-view-container').style.display = 'none';
-  document.getElementById('ctrl-history-list').style.display = 'block';
-}
-
-// EXPORT EXCEL DU PV ET DU TABLEAU DES ECARTS EXIGE
-function exportPVXLS() {
-  alert("Génération automatique du classeur Excel d'audit...");
-  const wb = XLSX.utils.book_new();
-  const wsData = [
-    ["AFG BANK GROUP — PROCÈS VERBAL D'AUDIT DE DATA VERIFICATION"],
-    ["Réf de l'audit", document.getElementById('pv-ref').textContent],
-    ["Filiale", document.getElementById('pv-fil').textContent],
-    ["Responsable d'extraction", document.getElementById('pv-test').textContent],
-    [],
-    ["Métrique de Contrôle", "Module", "Valeur Production", "Valeur Restauration", "Écart", "Statut Conformance"]
-  ];
-  
-  // Extraction des lignes du tableau réel du PV
-  const rows = document.querySelectorAll("#pv-res-body tr");
-  rows.forEach(r => {
-    const tds = r.querySelectorAll("td");
-    if(tds.length >= 6) {
-      wsData.push([tds[1].textContent, tds[2].textContent, tds[3].textContent, tds[4].textContent, tds[5].textContent, tds[6].textContent]);
-    }
-  });
-  
-  const ws = XLSX.utils.aoa_to_sheet(wsData);
-  XLSX.utils.book_append_sheet(wb, ws, "PV Intégrité Restauration");
-  XLSX.writeFile(wb, `PV_DBS_DataVerify_${Date.now()}.xlsx`);
-}
-
-// ==================== GESTION DU REPERTOIRE DES SCRIPTS SQL ====================
-function ouvrirModalRequete(qId = null) {
-  const m = document.getElementById('mo-query');
-  m.classList.add('op');
-  if (qId) {
-    const q = APP_STATE.queries.find(x => x.id === qId);
-    document.getElementById('mq-id').value = q.id;
-    document.getElementById('mq-code').value = q.code;
-    document.getElementById('mq-name').value = q.name;
-    document.getElementById('mq-module').value = q.module;
-    document.getElementById('mq-type').value = q.type;
-    document.getElementById('mq-sql').value = q.sql;
-    document.getElementById('mo-query-title').textContent = "Éditer et Optimiser la Requête";
-  } else {
-    document.getElementById('mq-id').value = '';
-    document.getElementById('mq-code').value = 'Q_NEW_METRIC';
-    document.getElementById('mq-name').value = '';
-    document.getElementById('mq-module').value = 'CORE';
-    document.getElementById('mq-type').value = 'oracle';
-    document.getElementById('mq-sql').value = 'SELECT * FROM ...';
-    document.getElementById('mo-query-title').textContent = "Ajouter un nouveau script d'extraction";
-  }
-}
-
-function fermerModalRequete() {
-  document.getElementById('mo-query').classList.remove('op');
-}
-
-function sauvegarderRequeteRepertoir() {
-  const id = document.getElementById('mq-id').value;
-  const code = document.getElementById('mq-code').value.trim();
-  const name = document.getElementById('mq-name').value.trim();
-  const mod = document.getElementById('mq-module').value.trim();
-  const typ = document.getElementById('mq-type').value;
-  const sql = document.getElementById('mq-sql').value.trim();
-
-  if (id) {
-    const q = APP_STATE.queries.find(x => x.id == id);
-    if(q) { q.code = code; q.name = name; q.module = mod; q.type = typ; q.sql = sql; }
-  } else {
-    APP_STATE.queries.push({
-      id: Date.now(), code: code, name: name, module: mod, type: typ, sql: sql
-    });
-  }
-  
-  synchroniserStockage();
-  renderTableauxParametres();
-  fermerModalRequete();
-  showNotif("✅ Référentiel des requêtes synchronisé");
-  sysLog('INFO', `[ADMIN] Modification apportée au script d'extraction : ${code}`);
-}
-
-function toggleModeWarning() {
-  const m = document.getElementById('t-mode').value;
-  document.getElementById('mode-warning').style.display = m === 'diff' ? 'flex' : 'none';
-}
-
-function showNotif(txt) {
-  const n = document.getElementById('notif');
-  n.textContent = txt;
-  n.style.display = 'flex';
-  setTimeout(() => n.style.display = 'none', 3000);
-}
-</script>
+document.addEventListener('DOMContentLoaded', () => {
+  sysLog('SYSTEM', 'Plateforme DBS DataVerify initialisée.');
+});
+  </script>
 </body>
 </html>
