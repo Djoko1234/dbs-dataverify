@@ -55,8 +55,8 @@
 </div>
 
 <script>
-    // Configuration : METTRE ICI TON URL NGROK ACTUELLE
-    const NGROK_URL = " https://trustee-composure-other.ngrok-free.dev"; 
+    // URL mise à jour sans espace superflu
+    const NGROK_URL = "https://trustee-composure-other.ngrok-free.dev"; 
 
     let APP = JSON.parse(localStorage.getItem('dbs_state')) || { logs: [], tests: [] };
 
@@ -68,7 +68,8 @@
         status.innerHTML = `<span class="status-ko">Vérification ${db} en cours...</span>`;
         
         try {
-            const response = await fetch(`${NGROK_URL}/api/test-db`, {
+            // Appel vers la route complète corrigée
+            const response = await fetch(`${NGROK_URL}/api/tests/test-db`, {
                 method: "POST",
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ db_name: db })
@@ -79,7 +80,7 @@
                 APP.logs.push({ date: new Date().toISOString(), action: "Connexion OK", db: db });
                 saveState();
             } else {
-                throw new Error();
+                throw new Error("Erreur serveur");
             }
         } catch (error) {
             status.innerHTML = `<span class="status-ko">Erreur : Backend injoignable. Vérifie ngrok.</span>`;
