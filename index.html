@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+<<<<<<< HEAD
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DBS DataVerify v3.0 — AFG Bank</title>
@@ -753,9 +754,61 @@ input:checked+.sw-sl:before{transform:translateX(20px)}
       <div class="pv-mi"><label>Filiale / Entité</label><span id="pv-fil">—</span></div>
       <div class="pv-mi"><label>Testeur</label><span id="pv-test">—</span></div>
       <div class="pv-mi"><label>Validateur DSI</label><span id="pv-valid">—</span></div>
-    </div>
-  </div>
+=======
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DBS DataVerify Pro — AFG Bank</title>
+    <style>
+        :root { --blue: #002171; --orange: #e65100; --green: #2e7d32; --red: #c62828; }
+        body { font-family: sans-serif; background: #f4f6f9; margin: 0; padding: 0; }
+        .container { width: 100%; max-width: 1200px; margin: auto; padding: 10px; }
+        .card { background: white; padding: 15px; margin-bottom: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .scroll-x { overflow-x: auto; width: 100%; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        .btn { padding: 10px 15px; border: none; cursor: pointer; color: white; border-radius: 4px; font-weight: bold; width: 100%; }
+        .btn-prod { background: var(--blue); }
+        .status-ok { color: var(--green); font-weight: bold; }
+        .status-ko { color: var(--red); font-weight: bold; }
+        @media (max-width: 600px) { th, td { padding: 5px; font-size: 12px; } }
+    </style>
+</head>
+<body>
 
+<div class="container">
+    <header style="background:var(--blue); color:white; padding:15px; border-radius:8px; margin-bottom:15px; text-align:center;">
+        <h2>DBS DataVerify Pro</h2>
+    </header>
+
+    <div class="card">
+        <h3>Connexion aux Bases (VPN requis)</h3>
+        <select id="db-select" style="width:100%; padding:10px; margin:10px 0;">
+            <option value="OBDX">OBDX | 10.11.19.17 | PROD</option>
+            <option value="GUINNEE">AFG GUINEE | 10.11.19.82 | PROD</option>
+            <option value="GABON">AFG GABON | 10.11.18.49 | PROD</option>
+        </select>
+        <button class="btn btn-prod" onclick="testConnection()">Tester Connexion</button>
+        <div id="conn-status" style="margin-top:10px; text-align:center;"></div>
+    </div>
+
+    <div class="card">
+        <h3>PV de Conformité</h3>
+        <div class="scroll-x">
+            <table id="pv-table">
+                <thead>
+                    <tr><th>Script</th><th>Vol. PROD</th><th>Vol. RESTO</th><th>Écart</th><th>Justification</th></tr>
+                </thead>
+                <tbody id="pv-body"></tbody>
+            </table>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-top:30px; font-size: 12px;">
+            <div>Signature Métier 1<br>___________</div>
+            <div>Signature Métier 2<br>___________</div>
+        </div>
+    </div>
+</div>
+
+<<<<<<< HEAD
   <!-- 1. OBJET -->
   <div class="pv-sec">
     <div class="pv-sec-t">I — Objet et périmètre du test</div>
@@ -963,7 +1016,7 @@ input:checked+.sw-sl:before{transform:translateX(20px)}
 <div class="al al-wa" style="margin-bottom:14px">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg>
   <div><strong>Note architecture :</strong> Ces logs sont stockés en mémoire locale (session navigateur). 
-  Ils se perdent au rechargement de la page. Pour une centralisation persistante des logs (audit réglementaire COBAC/BEAC), 
+  Ils se perdent au rechargement de la page. Pour une centralisation persistante des logs (), 
   un backend serveur est recommandé. <strong>GitHub Pages est adapté pour la démo et les tests UI</strong>, 
   mais pas pour la production bancaire sécurisée. Voir le guide de déploiement pour les alternatives.</div>
 </div>
@@ -1002,23 +1055,7 @@ function setBackendURL(url) {
   sysLog('INFO', '[CONFIG] Backend URL: ' + (BACKEND_URL || 'simulation locale'));
 }
 
-// Appel API générique avec fallback simulation
-async function apiCall(endpoint, body) {
-  if (!BACKEND_URL) return null; // Mode simulation
-  try {
-    const r = await fetch(BACKEND_URL + endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-    if (!r.ok) throw new Error('HTTP ' + r.status + ': ' + await r.text());
-    return await r.json();
-  } catch(e) {
-    sysLog('ERROR', '[API] ' + endpoint + ' — ' + e.message);
-    return null;
-  }
-}
-
+// 1. Initialisation de l'objet APP (Une seule fois dans tout le fichier)
 const APP = {
   user: null,
   execMode: 'both',
@@ -1030,9 +1067,30 @@ const APP = {
   logs: [],
   currentTest: null,
   lastComparison: null,
+  _jwt: null // Ajout du jeton pour l'authentification
 };
 
-
+// 2. Appel API générique (utilisant l'objet APP si besoin)
+async function apiCall(endpoint, body) {
+  if (!BACKEND_URL) return null; // Mode simulation
+  try {
+    const r = await fetch(BACKEND_URL + endpoint, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': APP._jwt ? 'Bearer ' + APP._jwt : '' // Utilisation du token stocké
+      },
+      body: JSON.stringify(body)
+    });
+    if (!r.ok) throw new Error('HTTP ' + r.status + ': ' + await r.text());
+    return await r.json();
+  } catch(e) {
+    if (typeof sysLog === 'function') {
+        sysLog('ERROR', '[API] ' + endpoint + ' — ' + e.message);
+    }
+    return null;
+  }
+}
 // ═══════════════════════════════════════════════════════════════════════
 // PERSISTANCE LOCALE (localStorage) — Données conservées après refresh
 // ═══════════════════════════════════════════════════════════════════════
@@ -3261,6 +3319,39 @@ document.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('ap')?.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
   document.getElementById('au')?.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
 });
+</script>
+=======
+<script>
+    function saveState() { localStorage.setItem('dbs_state', JSON.stringify(APP)); }
+
+    async function testConnection() {
+        const status = document.getElementById('conn-status');
+        const db = document.getElementById('db-select').value;
+        status.innerHTML = `<span class="status-ko">Vérification ${db} en cours...</span>`;
+        
+        try {
+            // Appel vers la route complète corrigée
+            const response = await fetch(`${NGROK_URL}/api/tests/test-db`, {
+                method: "POST",
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ db_name: db })
+            });
+            
+            if(response.ok) {
+                status.innerHTML = `<span class="status-ok">Connexion établie avec ${db}</span>`;
+                APP.logs.push({ date: new Date().toISOString(), action: "Connexion OK", db: db });
+                saveState();
+            } else {
+                throw new Error("Erreur serveur");
+            }
+        } catch (error) {
+            status.innerHTML = `<span class="status-ko">Erreur : Backend injoignable. Vérifie ngrok.</span>`;
+        }
+    }
+
+    window.onload = () => {
+        console.log("Plateforme prête. URL API configurée :", NGROK_URL);
+    };
 </script>
 </body>
 </html>
