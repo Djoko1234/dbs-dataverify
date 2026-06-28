@@ -989,8 +989,7 @@ input:checked+.sw-sl:before{transform:translateX(20px)}
 // CONFIGURATION BACKEND — modifier ici ou via l'interface
 // ═══════════════════════════════════════════════════════
 // ─── URL backend (ngrok ou serveur) ───────────────────────────────────────
-const NGROK_URL = localStorage.getItem('dbs_backend_url') || 'https://trustee-composure-other.ngrok-free.dev';
-let BACKEND_URL = NGROK_URL; // BACKEND_URL et NGROK_URL sont synonymes
+const NGROK_URL = localStorage.getItem('dbs_backend_url') || 'https://trustee-composure-other.ngrok-free.dev'; let BACKEND_URL = NGROK_URL; // Les deux sont synonymes window.NGROK_URL = NGROK_URL; // Accessible partout dans la page window.BACKEND_URL = BACKEND_URL; // BACKEND_URL et NGROK_URL sont synonymes
 // Pour changer l'URL ngrok: Serveurs & BD → Configuration Backend → Coller nouvelle URL
 // Si vide = mode simulation (standalone). Si renseigné = backend réel (FastAPI/ngrok)
 
@@ -1092,20 +1091,30 @@ const USERS_DB = [
 //   Réseau AFG     : 'http://IP_SERVEUR:8000'
 //   Cloud/Prod     : 'https://api.afgbank-dataverify.com'
 // ═══════════════════════════════════════════════════════════════════════
-
-// Tester si le backend est disponible (silencieux)
-async function checkBackend(){
+// Tester si le backend est disponible avec la route de test validée
+async function checkBackend() {
   try {
-    const r = await fetch(BACKEND_URL + '/', {
-      method: 'GET',
-      headers: { 'ngrok-skip-browser-warning': '1' },
-      signal: AbortSignal.timeout(8000)
+    const r = await fetch(BACKEND_URL + '/api/tests/test-db', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': '1' // OBLIGATOIRE pour éviter l'interstitiel Ngrok
+      },
+      body: JSON.stringify({ db_name: 'PING' }),
+      signal: AbortSignal.timeout(5000)
     });
+
+    // Si le serveur répond, on passe BACKEND_ONLINE à true
     BACKEND_ONLINE = r.ok;
-    if(BACKEND_ONLINE) sysLog('OK','[BACKEND] Serveur FastAPI connecté sur '+BACKEND_URL);
-  } catch(e) {
+    
+    if (BACKEND_ONLINE) {
+      sysLog('OK', '[BACKEND] Connexion active sur ' + BACKEND_URL);
+    } else {
+      sysLog('WARN', '[BACKEND] Serveur répond mais erreur HTTP ' + r.status);
+    }
+  } catch (e) {
     BACKEND_ONLINE = false;
-    sysLog('INFO','[BACKEND] Mode standalone — pas de backend actif ('+BACKEND_URL+')');
+    sysLog('INFO', '[BACKEND] Mode standalone — serveur injoignable (' + BACKEND_URL + ')');
   }
 }
 
